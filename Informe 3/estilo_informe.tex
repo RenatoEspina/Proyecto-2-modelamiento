@@ -1,0 +1,378 @@
+% =========================================================
+% ESTILOS Y COMANDOS PROPIOS DEL INFORME
+% Complementa a pucv_inf_2024.sty sin modificarlo.
+% =========================================================
+
+% ---------------------------------------------------------
+% Rótulos en español
+% Se reaplican después de babel para conservar los títulos de
+% índices definidos por pucv_inf_2024.sty.
+% ---------------------------------------------------------
+
+\AtBeginDocument{%
+    \renewcommand{\figurename}{Figura}%
+    \renewcommand{\tablename}{Tabla}%
+    \renewcommand{\nomname}{\uppercase{Lista de Símbolos}}%
+    \renewcommand{\contentsname}{\uppercase{Índice General}}%
+    \renewcommand{\listfigurename}{\uppercase{Lista de Figuras}}%
+    \renewcommand{\listtablename}{\uppercase{Lista de Tablas}}%
+    \renewcommand{\chaptername}{Capítulo}%
+    \renewcommand{\appendixname}{Anexo}%
+    \renewcommand{\partname}{Parte}%
+}
+
+% ---------------------------------------------------------
+% Bibliografía en español
+% Fuerza los rótulos APA en español («Recuperado el ... de»,
+% «2.ª ed.», «y» en lugar de «and») sin depender de babel.
+% ---------------------------------------------------------
+
+\ExecuteBibliographyOptions{language = spanish}
+\DeclareLanguageMapping{spanish}{spanish-apa}
+
+% ---------------------------------------------------------
+% Colores auxiliares
+% ---------------------------------------------------------
+
+\definecolor{notacolor}{HTML}{4472c4}   % azul institucional (igual a titlecolor)
+\definecolor{notafondo}{HTML}{EEF2FA}
+\definecolor{pendientecolor}{HTML}{B85C00}
+\definecolor{pendientefondo}{HTML}{FDF3E7}
+\definecolor{filacabecera}{HTML}{DCE6F5}
+
+% ---------------------------------------------------------
+% Cajas de nota y de tareas pendientes
+% (equivalen a las citas en bloque y a los bloques
+%  "POR COMPLETAR" del documento original en Markdown)
+% ---------------------------------------------------------
+
+\newtcolorbox{nota}[1][]{%
+    enhanced,
+    breakable,
+    colback = notafondo,
+    colframe = notacolor,
+    boxrule = 0pt,
+    leftrule = 3pt,
+    arc = 0pt,
+    outer arc = 0pt,
+    left = 8pt, right = 8pt, top = 6pt, bottom = 6pt,
+    fontupper = \small,
+    parbox = false,
+    #1
+}
+
+\newtcolorbox{pendiente}[1][Por completar]{%
+    enhanced,
+    breakable,
+    colback = pendientefondo,
+    colframe = pendientecolor,
+    boxrule = 0.6pt,
+    arc = 2pt,
+    left = 8pt, right = 8pt, top = 6pt, bottom = 6pt,
+    fontupper = \small,
+    parbox = false,
+    title = {\footnotesize\bfseries\MakeUppercase{#1}},
+    coltitle = white,
+    colbacktitle = pendientecolor
+}
+
+% Marca breve, para usar dentro de una línea de texto
+\newcommand{\porcompletarinline}[1]{%
+    \textcolor{pendientecolor}{\textbf{[por completar: #1]}}%
+}
+
+% ---------------------------------------------------------
+% Estilo común de las tablas largas
+% ---------------------------------------------------------
+
+\newcommand{\estilotabla}{%
+    \footnotesize
+    \setlength{\parskip}{0pt}%
+    \setlength{\parindent}{0pt}%
+    \setlength{\tabcolsep}{4pt}%
+    \renewcommand{\arraystretch}{1.25}%
+}
+
+\newcommand{\estilotablachica}{%
+    \estilotabla
+    \scriptsize
+}
+
+% Separación antes y después de las longtable
+\setlength{\LTpre}{8pt}
+\setlength{\LTpost}{8pt}
+
+% Columnas de párrafo centradas verticalmente arriba
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+% ---------------------------------------------------------
+% Identificadores de código, clases y estados
+% ---------------------------------------------------------
+
+\newcommand{\clase}[1]{\texttt{#1}}
+\newcommand{\estado}[1]{\texttt{#1}}
+\newcommand{\este}[1]{\textit{#1}}
+
+% Estereotipos UML
+\newcommand{\ster}[1]{\texttt{\guillemotleft #1\guillemotright}}
+
+% ---------------------------------------------------------
+% Figuras de diagramas: comando abreviado
+% #1 ancho relativo · #2 archivo · #3 título breve (Lista de Figuras)
+% #4 leyenda completa · #5 etiqueta
+% ---------------------------------------------------------
+
+\newcommand{\figuradiagrama}[5]{%
+    \begin{figure}[H]
+        \centering
+        \IfFileExists{Figuras/diagramas/#2}{%
+            \includegraphics[width=#1\textwidth]{#2}%
+        }{%
+            \fbox{\parbox[c][7cm][c]{0.85\textwidth}{\centering
+                \textbf{[Diagrama pendiente]}\\[4pt]
+                \texttt{Figuras/diagramas/#2}}}%
+        }
+        \caption[#3]{#4}
+        \label{#5}
+    \end{figure}%
+}
+
+% ---------------------------------------------------------
+% Tablas de casos de uso narrativos (formato de los ejemplos)
+% ---------------------------------------------------------
+
+\newcommand{\campocu}[2]{\hline \textbf{#1} & #2 \\}
+\newcommand{\encabezadocu}[1]{\hline \rowcolor{filacabecera} \multicolumn{2}{|c|}{\textbf{#1}} \\}
+\newcommand{\subencabezadocu}[2]{\hline \rowcolor{filacabecera} \textbf{#1} & \textbf{#2} \\}
+
+% ---------------------------------------------------------
+% Ajustes de listas y espaciado dentro de entornos
+% ---------------------------------------------------------
+
+\setlist[itemize]{leftmargin=1.2cm, itemsep=2pt, topsep=4pt}
+\setlist[enumerate]{leftmargin=1.2cm, itemsep=2pt, topsep=4pt}
+
+% Evita que hyperref rompa las referencias de longtable
+\hypersetup{
+    bookmarksnumbered = true,
+    pdftitle = {Informe 3 - Análisis y diseño estructurado del sistema BeeTracer},
+    pdfsubject = {ICI-3242 Modelamiento de Software - PUCV}
+}
+
+% Nombre de botón o menú entre comillas angulares
+\newcommand{\bt}[1]{\guillemotleft{}#1\guillemotright{}}
+
+% Numeración corrida de figuras y tablas (Figura 1, 2, 3... como en los ejemplos)
+\usepackage{chngcntr}
+\counterwithout{figure}{chapter}
+\counterwithout{table}{chapter}
+
+% ---------------------------------------------------------
+% Tolerancia de justificación: evita desbordes de línea con
+% nombres de clases largos en monoespaciado.
+% ---------------------------------------------------------
+
+\setlength{\emergencystretch}{3em}
+
+% ---------------------------------------------------------
+% Páginas de "Parte" (Parte 1: Análisis · Parte 2: Diseño)
+% ---------------------------------------------------------
+
+\renewcommand{\thepart}{\arabic{part}}
+\titleformat{\part}[display]
+    {\centering\normalfont\bfseries\Huge\color{titlecolor}}
+    {\MakeUppercase{\partname}~\thepart}{1em}{\MakeUppercase}
+
+% ---------------------------------------------------------
+% Estilos TikZ para los diagramas del análisis y diseño
+% estructurado (notación de Yourdon/DeMarco, Chen y
+% diagramas de estructura de Yourdon y Constantine)
+% ---------------------------------------------------------
+
+\usetikzlibrary{arrows.meta, positioning, calc, fit, backgrounds,
+    shapes.geometric, shapes.multipart, decorations.markings}
+
+\definecolor{dfdproceso}{HTML}{EAF1FB}
+\definecolor{dfdterminador}{HTML}{E6E6E6}
+\definecolor{dfdalmacen}{HTML}{FFF8E6}
+\definecolor{dfdborde}{HTML}{2F4F7F}
+
+\tikzset{
+    % --- Diagramas de flujo de datos ---
+    proceso/.style = {circle, draw = dfdborde, line width = 0.7pt,
+        fill = dfdproceso, align = center, font = \scriptsize,
+        minimum size = #1, inner sep = 1pt},
+    proceso/.default = 2.3cm,
+    terminador/.style = {rectangle, draw = black, line width = 0.7pt,
+        fill = dfdterminador, align = center, font = \scriptsize\bfseries,
+        minimum width = 2.5cm, minimum height = 0.95cm, inner sep = 3pt},
+    almacen/.style = {rectangle, fill = dfdalmacen, align = center,
+        font = \scriptsize, minimum width = #1, minimum height = 0.6cm,
+        inner sep = 2pt, outer sep = 0pt,
+        append after command = {
+            (\tikzlastnode.north west) edge[draw, -, line width = 0.8pt]
+            (\tikzlastnode.north east)
+            (\tikzlastnode.south west) edge[draw, -, line width = 0.8pt]
+            (\tikzlastnode.south east)}},
+    almacen/.default = 2.6cm,
+    flujo/.style = {-{Stealth[length = 2mm]}, line width = 0.5pt},
+    etq/.style = {font = \tiny, fill = white, inner sep = 1pt,
+        align = center, text = black},
+    % --- Diagrama entidad-relación (Chen) ---
+    entidad/.style = {rectangle split, rectangle split parts = 2,
+        draw = black, line width = 0.7pt,
+        font = \scriptsize, inner sep = 2.5pt, minimum width = 3.0cm, align = left,
+        rectangle split part align = {center, left},
+        rectangle split part fill = {dfdborde!22, white}},
+    relacion/.style = {diamond, aspect = 2.4, draw = black,
+        line width = 0.6pt, fill = dfdalmacen, font = \scriptsize,
+        align = center, inner sep = 0.5pt},
+    card/.style = {font = \scriptsize\bfseries, inner sep = 1pt, fill = white},
+    % --- Modelo relacional ---
+    tabla/.style = {rectangle split, rectangle split parts = 2,
+        draw = black, line width = 0.6pt, font = \tiny, align = left,
+        inner sep = 2pt, rectangle split part fill = {dfdborde!30, white},
+        rectangle split part align = {center, left}},
+    fk/.style = {-{Stealth[length = 1.6mm]}, line width = 0.45pt,
+        draw = dfdborde},
+    % --- Diagramas de estructura ---
+    modulo/.style = {rectangle, draw = black, line width = 0.7pt,
+        fill = dfdproceso, align = center, font = \scriptsize,
+        text width = #1, minimum height = 0.9cm, inner sep = 2pt,
+        execute at begin node = {\hyphenpenalty = 10000 \exhyphenpenalty = 10000}},
+    modulo/.default = 2.1cm,
+    predefinido/.style = {modulo = #1,
+        append after command = {
+            ($(\tikzlastnode.north west) + (0.12, 0)$) edge[draw, -, line width = 0.5pt]
+            ($(\tikzlastnode.south west) + (0.12, 0)$)
+            ($(\tikzlastnode.north east) + (-0.12, 0)$) edge[draw, -, line width = 0.5pt]
+            ($(\tikzlastnode.south east) + (-0.12, 0)$)}},
+    predefinido/.default = 2.1cm,
+    llamada/.style = {-{Stealth[length = 1.8mm]}, line width = 0.5pt},
+    dato/.style = {{Circle[open, length = 1.6mm]}-{Stealth[length = 1.6mm]},
+        line width = 0.4pt},
+    control/.style = {{Circle[length = 1.6mm]}-{Stealth[length = 1.6mm]},
+        line width = 0.4pt},
+    acop/.style = {font = \tiny, inner sep = 0.8pt, align = center},
+}
+
+% Rótulo de proceso: número en negrita y nombre debajo
+\newcommand{\proc}[2]{\textbf{#1}\\[-1pt]#2}
+
+% Inclusión de un diagrama TikZ ajustado al ancho disponible
+% #1 archivo en Figuras/tikz · #2 título breve · #3 leyenda · #4 etiqueta
+\newcommand{\diagramatikz}[4]{%
+    \begin{figure}[H]
+        \centering
+        \begin{adjustbox}{max width=\textwidth, max totalheight=0.80\textheight}
+            \input{Figuras/tikz/#1}
+        \end{adjustbox}
+        \caption[#2]{#3}
+        \label{#4}
+    \end{figure}%
+}
+
+% Par de flujos opuestos entre un terminador (o almacén) y un proceso.
+% #1 punto origen (externo) · #2 punto destino (proceso)
+% #3 rótulo del flujo #1->#2 · #4 rótulo del flujo #2->#1
+% #5 posición del rótulo #3 · #6 posición del rótulo #4 (0 a 1)
+\newcommand{\parflujo}[6]{%
+    \draw[flujo] ($(#1)!0.17cm!90:(#2)$) --
+        node[etq, auto, pos = #5] {#3} ($(#2)!0.17cm!-90:(#1)$);
+    \draw[flujo] ($(#2)!0.17cm!90:(#1)$) --
+        node[etq, auto, pos = #6] {#4} ($(#1)!0.17cm!-90:(#2)$);
+}
+
+% Flujo de lectura y escritura sobre un almacén (doble punta)
+\tikzset{flujorw/.style = {{Stealth[length = 2mm]}-{Stealth[length = 2mm]},
+    line width = 0.5pt}}
+
+% Diagrama TikZ en página apaisada
+% #1 archivo · #2 título breve · #3 leyenda · #4 etiqueta
+\newcommand{\diagramaapaisado}[4]{%
+    \begin{landscape}
+    \begin{figure}[p]
+        \centering
+        \begin{adjustbox}{max width=\linewidth, max totalheight=0.86\textheight}
+            \input{Figuras/tikz/#1}
+        \end{adjustbox}
+        \caption[#2]{#3}
+        \label{#4}
+    \end{figure}
+    \end{landscape}%
+}
+
+% Relación del DER entre dos entidades con su rombo y cardinalidades
+% #1 entidad A · #2 entidad B · #3 nombre del rombo · #4 rótulo
+% #5 cardinalidad junto a A · #6 cardinalidad junto a B · #7 posición del rombo
+\newcommand{\relER}[7]{%
+    \node[relacion] (#3) at ($(#1)!#7!(#2)$) {#4};
+    \draw[line width = 0.5pt] (#1) -- node[card, pos = 0.4] {#5} (#3);
+    \draw[line width = 0.5pt] (#3) -- node[card, pos = 0.6] {#6} (#2);
+}
+
+% ---------------------------------------------------------
+% Mini especificaciones (español estructurado)
+% ---------------------------------------------------------
+\newtcolorbox{minispec}[2]{%
+    enhanced, breakable, colback = white, colframe = dfdborde,
+    boxrule = 0.6pt, arc = 1pt, left = 6pt, right = 6pt, top = 3pt, bottom = 3pt,
+    title = {\textbf{Proceso #1:} #2}, fonttitle = \small, coltitle = white,
+    colbacktitle = dfdborde, fontupper = \small, parbox = false,
+    before skip = 6pt, after skip = 6pt}
+\newcommand{\msdato}[2]{\noindent\textbf{#1:} #2\par}
+\newcommand{\kw}[1]{\textsf{\textbf{#1}}}
+\newlist{logica}{enumerate}{3}
+\setlist[logica]{label = \arabic*., nosep, leftmargin = 1.6em, font = \footnotesize}
+\setlist[logica, 2]{label = \alph*., leftmargin = 1.4em}
+\setlist[logica, 3]{label = \roman*., leftmargin = 1.4em}
+\newcommand{\fl}[1]{\textit{#1}}
+
+% ---------------------------------------------------------
+% Diagramas de estructura: llamadas y acoplamientos
+% #1 tipo de acoplamiento (dato | control) · #2 módulo superior
+% #3 módulo subordinado · #4 rótulo
+% ---------------------------------------------------------
+\newcommand{\conecta}[2]{\draw[llamada] (#1) -- (#2);}
+\newcommand{\baja}[4][dato]{%
+    \draw[#1] ($(#2)!0.30!(#3)!0.24cm!-90:(#3)$) --
+        node[acop, auto, swap] {#4} ($(#2)!0.58!(#3)!0.24cm!-90:(#3)$);}
+\newcommand{\sube}[4][dato]{%
+    \draw[#1] ($(#2)!0.62!(#3)!0.24cm!90:(#3)$) --
+        node[acop, auto, swap] {#4} ($(#2)!0.34!(#3)!0.24cm!90:(#3)$);}
+% Rombo de selección (centro de transacción) en la base de un módulo
+\tikzset{seleccion/.style = {diamond, draw, fill = white, inner sep = 0pt,
+    minimum size = 0.32cm}}
+
+% Columnas del modelo relacional
+\newcommand{\pk}[1]{\uline{#1}}
+\newcommand{\fk}[1]{\textit{#1} (FK)}
+
+% Especificación detallada de un módulo del diseño
+\newtcolorbox{modspec}[1]{%
+    enhanced, breakable, colback = white, colframe = dfdborde!70!black,
+    boxrule = 0.6pt, arc = 1pt, left = 6pt, right = 6pt, top = 3pt, bottom = 3pt,
+    title = {\textbf{Módulo:} #1}, fonttitle = \small, coltitle = white,
+    colbacktitle = dfdborde!70!black, fontupper = \small, parbox = false,
+    before skip = 6pt, after skip = 6pt}
+
+% Tabla de módulos de un subsistema
+% #1 título de la tabla · #2 etiqueta · #3 filas
+\newcommand{\tablamodulos}[3]{%
+    {\estilotabla
+    \begin{longtable}{|L{3.1cm}|L{2.4cm}|L{2.9cm}|L{2.6cm}|L{3.6cm}|}
+    \caption{#1}\label{#2}\\
+    \hline
+    \rowcolor{filacabecera}
+    \textbf{Módulo} & \textbf{Llamado por} & \textbf{Entradas} & \textbf{Salidas} &
+    \textbf{Función} \\ \hline
+    \endfirsthead
+    \hline
+    \rowcolor{filacabecera}
+    \textbf{Módulo} & \textbf{Llamado por} & \textbf{Entradas} & \textbf{Salidas} &
+    \textbf{Función} \\ \hline
+    \endhead
+    #3
+    \end{longtable}}%
+}

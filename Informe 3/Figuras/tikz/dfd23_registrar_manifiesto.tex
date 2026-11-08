@@ -1,0 +1,30 @@
+% DFD de nivel 2 — Proceso 2.3: Registrar manifiesto
+\begin{tikzpicture}[font = \footnotesize,
+    etq/.append style = {font = \footnotesize},
+    proceso/.append style = {font = \footnotesize},
+    terminador/.append style = {font = \footnotesize\bfseries},
+    almacen/.append style = {font = \footnotesize}]
+    \node[font = \footnotesize\itshape, align = center] (H22) at (-10.4, 0) {desde\\el proceso 2.2};
+    \node[font = \footnotesize\itshape, align = center] (H25) at (13.2, 0) {hacia\\el proceso 2.5};
+
+    \node[proceso = 2.4cm] (P1) at (-6.0, 0) {\proc{2.3.1}{Registrar\\cabecera}};
+    \node[proceso = 2.4cm] (P2) at (-1.0, 0) {\proc{2.3.2}{Registrar\\contenedores}};
+    \node[proceso = 2.4cm] (P3) at ( 4.0, 0) {\proc{2.3.3}{Verificar\\consignatario}};
+    \node[proceso = 2.4cm] (P4) at ( 9.0, 0) {\proc{2.3.4}{Registrar\\líneas de\\carga}};
+
+    \node[almacen] (D5) at ( 1.5, -3.4) {D5 Manifiestos};
+    \node[almacen] (D2) at ( 4.0,  3.4) {D2 Clientes};
+    \node[almacen] (D4) at ( 9.0,  3.4) {D4 Tipos de bulto};
+
+    \draw[flujo] (H22.east) -- node[etq, above, pos = 0.5] {manifiesto\\válido} (P1.west);
+    \draw[flujo] (P1.east) -- node[etq, above, pos = 0.5] {contenedores\\declarados} (P2.west);
+    \draw[flujo] (P2.east) -- node[etq, above, pos = 0.5] {líneas\\declaradas} (P3.west);
+    \draw[flujo] (P3.east) -- node[etq, above, pos = 0.5] {líneas con\\consignatario} (P4.west);
+    \draw[flujo] (P4.east) -- node[etq, above, pos = 0.5] {resumen de\\registro} (H25.west);
+
+    \draw[flujo] (P1) -- (D5.west);
+    \draw[flujo] (P2) -- (D5.north west);
+    \draw[flujo] (P4) -- (D5.east);
+    \draw[flujorw] (P3) -- (D2.south);
+    \draw[flujo] (D4.south) -- (P4);
+\end{tikzpicture}

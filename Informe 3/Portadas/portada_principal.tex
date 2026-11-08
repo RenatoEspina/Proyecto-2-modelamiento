@@ -1,0 +1,112 @@
+\begin{titlepage}
+
+\thispagestyle{empty}
+
+% =========================================================
+% ENCABEZADO INSTITUCIONAL
+% =========================================================
+
+\begin{tikzpicture}[remember picture,overlay]
+
+    \node[
+        anchor=north,
+        inner sep=0pt
+    ] at (current page.north)
+    {
+        \includegraphics[
+            width=\paperwidth
+        ]{Figuras/encabezado_pucv.png}
+    };
+
+\end{tikzpicture}
+
+
+% =========================================================
+% TÍTULO DEL INFORME
+% =========================================================
+
+\vspace*{8.4cm}
+
+\begin{center}
+
+    \begin{minipage}{0.80\textwidth}
+
+        \centering
+
+        {\color{titlecolor}
+        \fontsize{20}{25}\selectfont
+        \bfseries
+        \MakeUppercase{\tituloInforme}
+        \par}
+
+        \vspace{0.55cm}
+
+        {\color{titlecolor}
+        \fontsize{13}{17}\selectfont
+        \itshape
+        \subtituloInforme
+        \par}
+
+    \end{minipage}
+
+\end{center}
+
+
+% =========================================================
+% INTEGRANTES
+% =========================================================
+
+\vfill
+
+\begin{flushright}
+
+    \begin{minipage}{0.50\textwidth}
+
+        \raggedright
+
+        {\color{titlecolor}
+        \large\bfseries
+        \textsc{Benjamín Contreras}\\[0.04cm]
+        \textsc{Renato Espina}\\[0.04cm]
+        \textsc{Joaquín Guarda}\\[0.04cm]
+        \textsc{Ignacio Ruiz}\\[0.04cm]
+        \textsc{Sergio Codoceo}
+        \par}
+
+
+        \vspace{0.6cm}
+
+
+        {\color{titlecolor}
+        \large\bfseries
+        \textsc{\asignaturaInforme}
+        \par}
+
+        \vspace{0.30cm}
+
+        {\color{titlecolor}
+        \normalsize
+        \textbf{Profesor:} \profesorInforme
+        \par}
+
+        \vspace{0.10cm}
+
+        {\color{titlecolor}
+        \normalsize
+        \textbf{Paralelo:} \paraleloInforme
+        \par}
+
+        \vspace{0.45cm}
+
+        {\color{titlecolor}
+        \large\bfseries
+        \fechaInforme
+        \par}
+
+    \end{minipage}
+
+\end{flushright}
+
+\vspace{1.0cm}
+
+\end{titlepage}

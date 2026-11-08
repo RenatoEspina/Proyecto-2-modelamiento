@@ -1,0 +1,41 @@
+% Diagrama de estructura - Subsistema 4: Ejecutar operación en terreno (aplicación móvil)
+\begin{tikzpicture}[y = 1.4cm]
+    \node[modulo = 3.6cm] (S) at (0, 0) {\textbf{Ejecutar operación en terreno}};
+    \coordinate (SL) at ($(S.south)!0.7!(S.south west)$);
+    \coordinate (SR) at ($(S.south)!0.7!(S.south east)$);
+    \node[modulo] (LR) at (-10.0, -2.9) {Leer registro\\de terreno};
+    \node[modulo] (IO) at (-7.0, -2.9) {Iniciar\\operación};
+    \node[modulo] (VS) at (-4.0, -2.9) {Verificar\\sello};
+    \node[modulo] (RL) at (-1.0, -2.9) {Registrar\\lote};
+    \node[modulo] (RI) at ( 2.0, -2.9) {Registrar\\incidencia};
+    \node[modulo] (CF) at ( 5.0, -2.9) {Cerrar\\faena};
+    \node[modulo] (MC) at ( 9.4, -2.9) {Mostrar\\confirmación};
+    \node[modulo] (CC) at (-3.6, -6.0) {Contrastar\\cantidad};
+    \node[modulo] (ED) at (-1.1, -6.0) {Evaluar\\diferencia};
+    \node[modulo] (RE) at ( 1.4, -6.0) {Registrar evidencia\\fotográfica};
+    \node[modulo] (VO) at ( 4.0, -6.0) {Verificar evidencia\\obligatoria};
+    \node[modulo] (RF) at ( 6.5, -6.0) {Registrar\\faltantes};
+    \node[predefinido] (SP) at ( 9.0, -6.0) {Sincronizar\\pendientes};
+    \node[predefinido] (CO) at (-1.1, -9.0) {Comprimir\\fotografía};
+    \node[predefinido] (SG) at ( 1.4, -9.0) {Sellar fecha, hora\\y geoposición};
+    \node[predefinido] (EN) at ( 3.9, -9.0) {Encolar\\fotografía};
+
+    \conecta{SL}{LR.north} \sube{SL}{LR.north}{registro}
+    \node[seleccion] (SEL) at (S.south) {};
+    \foreach \m in {IO, VS, RL, RI, CF} { \draw[llamada] (SEL.south) -- (\m.north); }
+    \baja{SEL.south}{IO.north}{datos de inicio}
+    \baja{SEL.south}{RL.north}{datos de lote}
+    \conecta{SR}{MC.north} \baja{SR}{MC.north}{confirmación}
+    \conecta{RL.south}{CC.north} \baja{RL.south}{CC.north}{cantidad}
+    \sube{RL.south}{CC.north}{diferencia}
+    \conecta{RL.south}{ED.north} \sube[control]{RL.south}{ED.north}{incidencia\\requerida}
+    \foreach \m in {VS, RL, RI, CF} { \draw[llamada] (\m.south) -- (RE.north); }
+    \baja{RI.south}{RE.north}{imagen, etapa}
+    \sube{RI.south}{RE.north}{id\_foto}
+    \conecta{CF.south}{VO.north} \sube[control]{CF.south}{VO.north}{completa}
+    \conecta{CF.south}{RF.north} \baja{CF.south}{RF.north}{líneas}
+    \conecta{CF.south}{SP.north} \sube{CF.south}{SP.north}{enviadas}
+    \conecta{RE.south}{CO.north} \baja{RE.south}{CO.north}{imagen}
+    \conecta{RE.south}{SG.north} \baja{RE.south}{SG.north}{fotografía}
+    \conecta{RE.south}{EN.north} \baja{RE.south}{EN.north}{fotografía}
+\end{tikzpicture}

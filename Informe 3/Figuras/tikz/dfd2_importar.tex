@@ -1,0 +1,41 @@
+% DFD de nivel 1 — Proceso 2: Importar manifiesto
+\begin{tikzpicture}[font = \footnotesize,
+    etq/.append style = {font = \footnotesize},
+    proceso/.append style = {font = \footnotesize},
+    terminador/.append style = {font = \footnotesize\bfseries},
+    almacen/.append style = {font = \footnotesize}]
+    \node[terminador] (JF)  at (-8.0,  1.6) {Jefe de faena};
+    \node[terminador] (JFb) at (-8.0, -5.4) {Jefe de faena*};
+    \node[terminador] (SNA) at ( 4.6,  7.8) {Servicio Nacional\\de Aduanas};
+    \node[terminador] (SNAb) at ( 4.6, -8.6) {Servicio Nacional\\de Aduanas*};
+
+    \node[proceso = 2.4cm] (P21) at (-2.6,  4.6) {\proc{2.1}{Obtener\\manifiesto}};
+    \node[proceso = 2.4cm] (P22) at ( 4.6,  2.0) {\proc{2.2}{Validar\\estructura\\y datos}};
+    \node[proceso = 2.4cm] (P23) at ( 4.6, -3.6) {\proc{2.3}{Registrar\\manifiesto}};
+    \node[proceso = 2.4cm] (P24) at (-1.8, -0.6) {\proc{2.4}{Generar\\reporte de\\errores}};
+    \node[proceso = 2.4cm] (P25) at (-0.6, -5.6) {\proc{2.5}{Notificar\\resultado de\\importación}};
+
+    \node[almacen] (D5)  at (-2.6,  8.0) {D5 Manifiestos};
+    \node[almacen] (D4)  at ( 9.4,  2.0) {D4 Tipos de bulto};
+    \node[almacen] (D5b) at ( 9.6, -2.0) {D5* Manifiestos};
+    \node[almacen] (D2)  at ( 9.6, -3.6) {D2 Clientes};
+    \node[almacen] (D4b) at ( 9.6, -5.2) {D4* Tipos de bulto};
+
+    \parflujo{JF.20}{P21.200}{solicitud de\\importación}{aviso de importación\\duplicada}{0.45}{0.5}
+    \draw[flujo] (P21.30) -- node[etq, above left = -1pt, pos = 0.5] {solicitud de\\manifiesto} (SNA.west);
+    \draw[flujo] (SNA.south) -- node[etq, right = 1pt, pos = 0.5] {manifiesto XML} (P22.north);
+    \draw[flujo] (P21.-25) -- node[etq, above right = -1pt, pos = 0.45] {viaje\\solicitado} (P22.165);
+    \draw[flujo] (P22.-90) -- node[etq, right = 1pt, pos = 0.5] {manifiesto\\válido} (P23.90);
+    \draw[flujo] (P22.200) -- node[etq, below right = -1pt, pos = 0.5] {errores de\\validación} (P24.15);
+    \draw[flujo] (P24.170) -- node[etq, above, pos = 0.5] {reporte de\\errores} (JF.-25);
+    \draw[flujo] (P24.-80) -- node[etq, left = 1pt, pos = 0.5] {importación\\rechazada} (P25.95);
+    \draw[flujo] (P23.200) -- node[etq, below right = -1pt, pos = 0.5] {resumen de\\registro} (P25.20);
+    \draw[flujo] (P25.180) -- node[etq, above, pos = 0.5] {resumen de\\importación} (JFb.east);
+    \draw[flujo] (P25.-40) -- node[etq, above right = -1pt, pos = 0.5] {notificación de\\importación} (SNAb.west);
+
+    \draw[flujo] (D5.south) -- (P21.north);
+    \draw[flujo] (D4.west) -- (P22.east);
+    \draw[flujorw] (P23) -- (D5b.west);
+    \draw[flujorw] (P23) -- (D2.west);
+    \draw[flujo] (D4b.west) -- (P23);
+\end{tikzpicture}

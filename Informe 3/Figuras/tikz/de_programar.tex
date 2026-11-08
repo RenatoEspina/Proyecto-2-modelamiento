@@ -1,0 +1,37 @@
+% Diagrama de estructura - Subsistema 3: Programar faenas (análisis de transacción)
+\begin{tikzpicture}[y = 1.4cm]
+    \node[modulo = 2.4cm] (S) at (0, 0) {\textbf{Programar faenas}};
+    \coordinate (SL) at ($(S.south)!0.7!(S.south west)$);
+    \coordinate (SR) at ($(S.south)!0.7!(S.south east)$);
+    \node[modulo] (LS) at (-9.4, -2.9) {Leer solicitud\\de programación};
+    \node[modulo] (CP) at (-6.2, -2.9) {Crear\\programación};
+    \node[modulo] (MP) at (-3.4, -2.9) {Modificar\\programación};
+    \node[modulo] (AC) at ( 0.8, -2.9) {Asignar cuadrilla\\y jefe tarjador};
+    \node[modulo] (EF) at ( 5.6, -2.9) {Entregar faenas\\asignadas};
+    \node[modulo] (MC) at ( 9.4, -2.9) {Mostrar\\confirmación};
+    \node[modulo] (VC) at (-4.8, -5.9) {Verificar conflicto\\de agenda};
+    \node[modulo] (DR) at (-1.6, -5.9) {Determinar recursos\\disponibles};
+    \node[modulo] (VD) at ( 0.9, -5.9) {Verificar\\disponibilidad};
+    \node[modulo] (RA) at ( 3.4, -5.9) {Registrar\\asignación};
+    \node[predefinido] (AU) at ( 5.9, -5.9) {Autenticar\\usuario};
+    \node[modulo] (OF) at ( 8.4, -5.9) {Obtener faenas\\del jefe tarjador};
+
+    \conecta{SL}{LS.north} \sube{SL}{LS.north}{solicitud}
+    \node[seleccion] (SEL) at (S.south) {};
+    \foreach \m in {CP, MP, AC, EF} { \draw[llamada] (SEL.south) -- (\m.north); }
+    \baja{SEL.south}{CP.north}{datos nueva\\programación}
+    \baja{SEL.south}{AC.north}{datos de\\asignación}
+    \baja{SEL.south}{EF.north}{credenciales}
+    \sube{SEL.south}{EF.north}{faenas}
+    \conecta{SR}{MC.north} \baja{SR}{MC.north}{confirmación}
+    \conecta{CP.south}{VC.north} \baja{CP.south}{VC.north}{franja}
+    \sube[control]{CP.south}{VC.north}{conflicto}
+    \conecta{MP.south}{VC.north}
+    \conecta{AC.south}{DR.north} \sube{AC.south}{DR.north}{recursos}
+    \conecta{AC.south}{VD.north} \baja{AC.south}{VD.north}{selección}
+    \sube[control]{AC.south}{VD.north}{disponible}
+    \conecta{AC.south}{RA.north} \baja{AC.south}{RA.north}{asignación}
+    \conecta{EF.south}{AU.north} \sube[control]{EF.south}{AU.north}{autenticado}
+    \conecta{EF.south}{OF.north} \baja{EF.south}{OF.north}{id\_trabajador}
+    \sube{EF.south}{OF.north}{faenas}
+\end{tikzpicture}

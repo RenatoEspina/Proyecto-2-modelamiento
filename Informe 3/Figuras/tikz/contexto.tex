@@ -1,0 +1,52 @@
+% Diagrama de contexto (notación de Yourdon)
+% Los terminadores repetidos para evitar cruces se marcan con asterisco.
+\begin{tikzpicture}[font = \scriptsize, etq/.append style = {font = \scriptsize}]
+    \node[proceso = 5.8cm, font = \large] (S) at (0, 0)
+        {\textbf{0}\\[3pt]Sistema\\BeeTracer};
+
+    \node[terminador] (ADM) at (-7.4, 0.0) {Administrador\\del depósito};
+    \node[terminador, minimum height = 1.4cm] (JF) at (-5.6, 5.9) {Jefe de faena};
+    \node[terminador] (SNA) at ( 0.0, 7.9) {Servicio Nacional\\de Aduanas};
+    \node[terminador, minimum height = 1.4cm] (JF2) at ( 6.7, 4.9) {Jefe de faena*};
+    \node[terminador, minimum height = 2.6cm] (SUP) at ( 7.4, 0.4) {Supervisor\\del reporte};
+    \node[terminador, minimum height = 2.6cm] (CLI) at ( 7.0, -5.0) {Cliente\\del depósito};
+    \node[terminador, minimum width = 3.4cm] (JT)  at ( 0.0, -7.9) {Jefe tarjador};
+    \node[terminador] (JT2) at (-5.6, -5.9) {Jefe tarjador*};
+
+    % Administrador del depósito
+    \parflujo{ADM.east}{S.180}{solicitud de\\mantención}{resultado de\\mantención}{0.5}{0.5}
+
+    % Jefe de faena: importación y programación
+    \parflujo{JF.-150}{S.155}{solicitud de\\importación}{resultado de\\importación}{0.3}{0.6}
+    \parflujo{JF.-35}{S.118}{datos de\\programación}{confirmación de\\programación}{0.65}{0.3}
+
+    % Servicio Nacional de Aduanas
+    \parflujo{SNA.-118}{S.100}{manifiesto\\XML}{solicitud de\\manifiesto}{0.3}{0.5}
+    \draw[flujo] (S.78) -- node[etq, right = 2pt, pos = 0.5] {notificación de\\importación}
+        (SNA.-40);
+
+    % Jefe de faena*: operaciones y reenvío
+    \parflujo{JF2.180}{S.50}{consulta de\\operaciones}{listado de\\operaciones}{0.3}{0.45}
+    \parflujo{JF2.-90}{S.27}{solicitud de\\reenvío}{resultado\\de envío}{0.45}{0.3}
+
+    % Supervisor del reporte
+    \coordinate (sup1) at ($(SUP.west) + (0, 0.95)$);
+    \coordinate (sup2) at ($(SUP.west) + (0, -0.95)$);
+    \parflujo{sup1}{S.18}{solicitud de\\revisión}{reporte para\\revisión}{0.3}{0.5}
+    \parflujo{sup2}{S.-6}{decisión de\\validación}{resultado\\de envío}{0.5}{0.3}
+
+    % Cliente del depósito
+    \coordinate (cli1) at ($(CLI.west) + (0, 0.95)$);
+    \coordinate (cli2) at ($(CLI.west) + (0, -0.95)$);
+    \parflujo{cli1}{S.-28}{consulta de\\estado}{estado de\\operaciones}{0.15}{0.5}
+    \parflujo{cli2}{S.-58}{solicitud\\de PDF}{reporte\\PDF}{0.22}{0.3}
+
+    % Jefe tarjador: registro de terreno y recaptura
+    \coordinate (jt1) at ($(JT.north) + (1.15, 0)$);
+    \coordinate (jt2) at ($(JT.north) + (-1.15, 0)$);
+    \parflujo{jt1}{S.-75}{registro de\\terreno}{confirmación\\de registro}{0.3}{0.5}
+    \parflujo{jt2}{S.-105}{fotografía de\\reemplazo}{solicitud de\\recaptura}{0.5}{0.3}
+
+    % Jefe tarjador*: acceso a la aplicación móvil
+    \parflujo{JT2.30}{S.-145}{credenciales}{faenas\\asignadas}{0.5}{0.5}
+\end{tikzpicture}

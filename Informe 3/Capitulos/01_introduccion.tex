@@ -1,0 +1,44 @@
+\chapter{Introducción}
+\label{cap:introduccion}
+
+En el Informe 2 se reconstruyó, mediante ingeniería inversa, el funcionamiento de BeeTracer,
+la plataforma de Bilix Ingeniería que digitaliza el desconsolidado de contenedores en
+terminales extraportuarios. Ese trabajo usó el Lenguaje Unificado de Modelado (UML) y el
+enfoque orientado a objetos de \textcite{larman2003}: se identificaron los actores, los casos de
+uso, las interacciones entre objetos y un diagrama de clases que explica la estructura del
+sistema.
+
+El presente informe corresponde a la tercera entrega de la asignatura Modelamiento de Software
+y aborda el mismo sistema desde otro paradigma: el \textbf{análisis y diseño estructurado}. En
+lugar de preguntar qué objetos colaboran, se pregunta qué datos entran al sistema, cómo se
+transforman y dónde se almacenan. Para ello se sigue el análisis estructurado moderno de
+\textcite{yourdon1989} y \textcite{demarco1979}, y el diseño estructurado de
+\textcite{yourdon1979} y \textcite{pagejones1988}. Las fuentes de información son las mismas
+del informe anterior: la charla técnica del equipo de BeeTracer
+\parencite{charlabeetracer2026}, la información pública de la plataforma \parencite{bilix_sf}
+y el propio modelo UML, que aquí se usa como punto de partida para asegurar la coherencia
+entre ambas entregas.
+
+El documento se organiza en dos partes, de acuerdo con la pauta de la asignatura:
+
+\begin{itemize}
+    \item \textbf{Parte 1, Análisis estructurado.} Comprende el \emph{modelo ambiental}, que
+    delimita el sistema frente a su entorno mediante la declaración de propósitos, el
+    diagrama de contexto y la lista de acontecimientos; y el \emph{modelo de comportamiento},
+    que describe su funcionamiento interno mediante los diagramas de flujo de datos (niveles
+    0, 1 y 2), el diagrama entidad-relación, las mini especificaciones de los procesos
+    elementales y el diccionario de datos.
+    \item \textbf{Parte 2, Diseño estructurado.} Traduce el modelo anterior a una
+    arquitectura implementable: el diagrama de estructura, obtenido de los diagramas de flujo
+    de datos mediante el análisis de transacción y de transformación; el modelo relacional,
+    derivado del diagrama entidad-relación; y la especificación de cada módulo.
+\end{itemize}
+
+Siguiendo a \textcite{yourdon1989}, el análisis se plantea como un \emph{modelo esencial}: se
+supone una tecnología perfecta, por lo que no se modelan aspectos como la falta de cobertura
+en el patio, la compresión de imágenes o el canal por el que viaja un correo. Esos aspectos,
+centrales en BeeTracer, no se pierden: reaparecen en la Parte 2 como módulos de
+implementación (sincronización diferida, compresión de fotografías, envío de correo), que es
+donde corresponde tratarlos. Al igual que en el informe anterior, los procesos, datos y
+módulos presentados son una propuesta inferida, coherente con el comportamiento observado,
+pero no necesariamente idéntica a la implementación real de BeeTracer.

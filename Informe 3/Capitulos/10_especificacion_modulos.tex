@@ -1,0 +1,482 @@
+\chapter{Especificaciones de cada módulo}
+\label{cap:modulos}
+
+Este capítulo especifica los módulos de los diagramas de estructura del
+Capítulo~\ref{cap:estructura}. Mientras las mini especificaciones describen \emph{qué} hace
+cada proceso del modelo esencial, las especificaciones de módulos describen \emph{cómo} se
+organiza el programa: quién invoca a cada módulo, qué parámetros recibe y devuelve (sus
+acoplamientos) y qué pasos ejecuta.
+
+Para cada subsistema se presenta primero una tabla con todos sus módulos y luego la
+especificación detallada, en pseudocódigo, de sus módulos de control y de los módulos que
+concentran las reglas de negocio. Las banderas de control se escriben en
+\texttt{monoespaciado}. Los módulos que implementan un proceso elemental siguen la lógica de
+su mini especificación (Sección~\ref{sec:minispec}), que se indica entre paréntesis.
+
+% =========================================================
+\section{Módulo principal}
+
+\tablamodulos{Módulos del panorama general.}{tab:mod-general}{%
+Sistema BeeTracer & Ninguno (raíz) & Ninguna & Ninguna & Centro de transacción: obtiene la
+solicitud, la despacha y muestra el resultado. \\ \hline
+Obtener transacción & Sistema BeeTracer & Ninguna & solicitud & Lee la solicitud y
+autentica al usuario. \\ \hline
+Leer solicitud & Obtener transacción & Ninguna & solicitud & Captura la solicitud desde la
+interfaz web o móvil. \\ \hline
+Despachar transacción & Sistema BeeTracer & solicitud & resultado & Selecciona el
+subsistema según el tipo de transacción. \\ \hline
+Mostrar resultado & Sistema BeeTracer & resultado & Ninguna & Presenta la respuesta en la
+interfaz que originó la solicitud. \\ \hline
+}
+
+\begin{modspec}{Sistema BeeTracer}
+\msdato{Llama a}{Obtener transacción, Despachar transacción, Mostrar resultado.}
+\msdato{Entradas / salidas}{Ninguna (módulo raíz).}
+\textbf{Proceso:}
+\begin{logica}
+    \item \kw{REPETIR} mientras el sistema esté en servicio:
+    \begin{logica}
+        \item Obtener transacción $\rightarrow$ solicitud, \texttt{autenticado}.
+        \item \kw{SI} \texttt{autenticado} = falso \kw{ENTONCES} resultado = ``acceso
+        denegado'' \kw{SINO SI} el rol del usuario no tiene el permiso de la transacción
+        \kw{ENTONCES} resultado = ``operación no permitida'' \kw{SINO} Despachar
+        transacción(solicitud) $\rightarrow$ resultado.
+        \item Mostrar resultado(resultado).
+    \end{logica}
+\end{logica}
+\end{modspec}
+
+\begin{modspec}{Despachar transacción}
+\msdato{Llamado por}{Sistema BeeTracer.}
+\msdato{Llama a}{Los seis subsistemas (selección).}
+\msdato{Entradas}{solicitud. \textbf{Salidas:} resultado.}
+\textbf{Proceso:}
+\begin{logica}
+    \item \kw{SEGÚN} el tipo de solicitud:
+    \begin{logica}
+        \item mantención de datos maestros $\rightarrow$ Administrar datos maestros.
+        \item importación $\rightarrow$ Importar manifiesto.
+        \item programación o consulta de faenas asignadas $\rightarrow$ Programar faenas.
+        \item registro de terreno $\rightarrow$ Ejecutar operación en terreno.
+        \item revisión, decisión o reemplazo de evidencia $\rightarrow$ Validar reporte.
+        \item reenvío o consulta de operaciones y reportes $\rightarrow$ Distribuir y
+        consultar reportes.
+    \end{logica}
+    \item \kw{SI} Ejecutar operación en terreno devuelve \texttt{finalizada} \kw{ENTONCES}
+    invocar Validar reporte con la transacción ``generar borrador''.
+    \item \kw{SI} Validar reporte devuelve \texttt{aprobado} \kw{ENTONCES} invocar
+    Distribuir y consultar reportes con la transacción ``enviar reporte''.
+    \item Retornar resultado.
+\end{logica}
+\end{modspec}
+
+% =========================================================
+\section{Subsistema 1: Administrar datos maestros}
+
+\tablamodulos{Módulos del subsistema Administrar datos maestros.}{tab:mod-maestros}{%
+Administrar datos maestros & Despachar transacción & solicitud de mantención & resultado de
+mantención & Valida y selecciona la mantención según el tipo de dato maestro. \\ \hline
+Leer solicitud de mantención & Administrar datos maestros & Ninguna & solicitud & Lee el
+formulario y la acción solicitada. \\ \hline
+Validar datos maestros & Administrar datos maestros & solicitud & \texttt{válido}, errores
+& Verifica campos obligatorios y formatos. \\ \hline
+Mantener usuario & Administrar datos maestros & datos de usuario & resultado & Aplica la
+acción sobre el usuario (mini especificación 1.1). \\ \hline
+Mantener rol y permisos & Administrar datos maestros & datos de rol & resultado & Aplica la
+acción sobre el rol y sus permisos (1.2). \\ \hline
+Mantener tipo de bulto & Administrar datos maestros & datos de tipo de bulto & resultado &
+Aplica la acción sobre el tipo de bulto (1.3). \\ \hline
+Mantener cliente & Administrar datos maestros & datos de cliente & resultado & Aplica la
+acción sobre el cliente (1.4). \\ \hline
+Mantener trabajador y cuadrilla & Administrar datos maestros & datos de trabajador &
+resultado & Aplica la acción sobre el trabajador o la cuadrilla (1.5). \\ \hline
+Mostrar resultado de mantención & Administrar datos maestros & resultado & Ninguna &
+Informa el éxito o los errores al Administrador. \\ \hline
+}
+
+\begin{modspec}{Administrar datos maestros}
+\msdato{Llamado por}{Despachar transacción.}
+\msdato{Llama a}{Leer solicitud de mantención, Validar datos maestros, los cinco módulos
+Mantener (selección), Mostrar resultado de mantención.}
+\msdato{Entradas}{solicitud de mantención. \textbf{Salidas:} resultado de mantención.}
+\textbf{Proceso:}
+\begin{logica}
+    \item Leer solicitud de mantención $\rightarrow$ solicitud.
+    \item Validar datos maestros(solicitud) $\rightarrow$ \texttt{válido}, errores.
+    \item \kw{SI} \texttt{válido} = falso \kw{ENTONCES} resultado = errores \kw{SINO SEGÚN}
+    el tipo de dato maestro invocar Mantener usuario, Mantener rol y permisos, Mantener tipo
+    de bulto, Mantener cliente o Mantener trabajador y cuadrilla $\rightarrow$ resultado.
+    \item Mostrar resultado de mantención(resultado).
+\end{logica}
+\end{modspec}
+
+\begin{modspec}{Validar datos maestros}
+\msdato{Llamado por}{Administrar datos maestros.}
+\msdato{Llama a}{Validar RUT, Validar email.}
+\msdato{Entradas}{solicitud. \textbf{Salidas:} \texttt{válido}, errores.}
+\textbf{Proceso:}
+\begin{logica}
+    \item errores = lista vacía.
+    \item \kw{PARA CADA} campo obligatorio de la acción: \kw{SI} está vacío \kw{ENTONCES}
+    agregar ``campo obligatorio'' a errores.
+    \item \kw{SI} la solicitud incluye rut \kw{ENTONCES} Validar RUT(rut) $\rightarrow$
+    \texttt{rut válido}; \kw{SI} es falso, agregar el error.
+    \item \kw{SI} la solicitud incluye email \kw{ENTONCES} Validar email(email)
+    $\rightarrow$ \texttt{email válido}; \kw{SI} es falso, agregar el error.
+    \item \texttt{válido} = (errores está vacía); retornar \texttt{válido} y errores.
+\end{logica}
+\end{modspec}
+
+% =========================================================
+\section{Subsistema 2: Importar manifiesto}
+
+\tablamodulos{Módulos del subsistema Importar manifiesto.}{tab:mod-importar}{%
+Importar manifiesto & Despachar transacción & solicitud de importación & resultado de
+importación & Coordina las ramas aferente, central y eferente. \\ \hline
+Obtener manifiesto válido & Importar manifiesto & Ninguna & manifiesto válido,
+\texttt{válido}, errores & Rama aferente: obtiene y valida el XML. \\ \hline
+Leer solicitud de importación & Obtener manifiesto válido & Ninguna & nave, viaje, fecha &
+Lee los datos del viaje (2.1). \\ \hline
+Verificar importación previa & Obtener manifiesto válido & nave, viaje &
+\texttt{duplicado} & Busca un manifiesto del mismo viaje (2.1). \\ \hline
+Validar estructura y datos & Obtener manifiesto válido & xml & \texttt{válido}, errores &
+Valida esquema, contenedores y líneas (2.2). \\ \hline
+Registrar manifiesto & Importar manifiesto & manifiesto válido & resumen & Centro de
+transformación: registra cabecera, contenedores y líneas (2.3). \\ \hline
+Registrar cabecera & Registrar manifiesto & cabecera & id\_manifiesto & Escribe el
+manifiesto (2.3.1). \\ \hline
+Registrar contenedores & Registrar manifiesto & contenedores, id\_manifiesto &
+\{id\_contenedor\} & Escribe los contenedores (2.3.2). \\ \hline
+Verificar consignatario & Registrar manifiesto & rut, razon\_social & id\_cliente, advertencia
+& Busca o crea el cliente (2.3.3). \\ \hline
+Registrar líneas de carga & Registrar manifiesto & líneas & cantidad\_lineas & Escribe las
+líneas (2.3.4). \\ \hline
+Emitir resultado de importación & Importar manifiesto & resumen o errores & Ninguna & Rama
+eferente: informa a Aduanas y al Jefe de faena. \\ \hline
+Generar reporte de errores & Emitir resultado de importación & errores & reporte de errores
+& Compone el reporte (2.4). \\ \hline
+Mostrar resumen de importación & Emitir resultado de importación & resumen & Ninguna &
+Presenta el resumen al Jefe de faena (2.5). \\ \hline
+}
+
+\begin{modspec}{Importar manifiesto}
+\msdato{Llamado por}{Despachar transacción.}
+\msdato{Llama a}{Obtener manifiesto válido, Registrar manifiesto, Emitir resultado de
+importación.}
+\msdato{Entradas}{solicitud de importación. \textbf{Salidas:} resultado de importación.}
+\textbf{Proceso:}
+\begin{logica}
+    \item Obtener manifiesto válido $\rightarrow$ manifiesto válido, \texttt{válido}, errores.
+    \item \kw{SI} \texttt{válido} \kw{ENTONCES} Registrar manifiesto(manifiesto válido)
+    $\rightarrow$ resumen; Emitir resultado de importación(resumen).
+    \item \kw{SINO} Emitir resultado de importación(errores).
+\end{logica}
+\end{modspec}
+
+\begin{modspec}{Obtener manifiesto válido}
+\msdato{Llamado por}{Importar manifiesto.}
+\msdato{Llama a}{Leer solicitud de importación, Verificar importación previa, Descargar XML
+de Aduanas, Validar estructura y datos.}
+\msdato{Entradas}{Ninguna. \textbf{Salidas:} manifiesto válido, \texttt{válido}, errores.}
+\textbf{Proceso:}
+\begin{logica}
+    \item Leer solicitud de importación $\rightarrow$ nave, viaje, fecha, reemplazar.
+    \item Verificar importación previa(nave, viaje) $\rightarrow$ \texttt{duplicado}.
+    \item \kw{SI} \texttt{duplicado} y no reemplazar \kw{ENTONCES} retornar \texttt{válido} =
+    falso con el aviso de importación duplicada.
+    \item Descargar XML de Aduanas(nave, viaje, fecha) $\rightarrow$ xml; \kw{SI} el servicio
+    no responde, retornar \texttt{válido} = falso con ``manifiesto no disponible''.
+    \item Validar estructura y datos(xml) $\rightarrow$ \texttt{válido}, errores; retornar.
+\end{logica}
+\end{modspec}
+
+% =========================================================
+\section{Subsistema 3: Programar faenas}
+
+\tablamodulos{Módulos del subsistema Programar faenas.}{tab:mod-programar}{%
+Programar faenas & Despachar transacción & datos de programación o credenciales &
+confirmación o faenas asignadas & Selecciona la transacción de programación. \\ \hline
+Leer solicitud de programación & Programar faenas & Ninguna & solicitud & Lee el formulario
+o la consulta de la aplicación móvil. \\ \hline
+Crear programación & Programar faenas & datos de nueva programación & id\_programacion &
+Crea la programación (3.1). \\ \hline
+Modificar programación & Programar faenas & cambio de programación & confirmación &
+Reprograma, anula, elimina o cambia el estado (3.3). \\ \hline
+Verificar conflicto de agenda & Crear y Modificar programación & franja, id\_contenedor &
+\texttt{conflicto} & Detecta cruces con otras programaciones. \\ \hline
+Asignar cuadrilla y jefe tarjador & Programar faenas & datos de asignación & confirmación &
+Coordina la asignación (3.2). \\ \hline
+Determinar recursos disponibles & Asignar cuadrilla y jefe tarjador & id\_programacion &
+recursos disponibles & Lista cuadrillas y jefes libres (3.2.1). \\ \hline
+Verificar disponibilidad & Asignar cuadrilla y jefe tarjador & selección &
+\texttt{disponible} & Revalida la selección (3.2.2). \\ \hline
+Registrar asignación & Asignar cuadrilla y jefe tarjador & asignación & Ninguna & Guarda la
+asignación (3.2.3). \\ \hline
+Entregar faenas asignadas & Programar faenas & credenciales & faenas asignadas & Entrega
+las faenas al jefe tarjador (3.4). \\ \hline
+Obtener faenas del jefe tarjador & Entregar faenas asignadas & id\_trabajador & faenas &
+Lee programaciones y carga declarada. \\ \hline
+Mostrar confirmación & Programar faenas & confirmación & Ninguna & Presenta el resultado. \\
+\hline
+}
+
+\begin{modspec}{Asignar cuadrilla y jefe tarjador}
+\msdato{Llamado por}{Programar faenas.}
+\msdato{Llama a}{Determinar recursos disponibles, Verificar disponibilidad, Registrar
+asignación.}
+\msdato{Entradas}{datos de asignación. \textbf{Salidas:} confirmación de programación.}
+\textbf{Proceso:}
+\begin{logica}
+    \item \kw{SI} los datos son una solicitud de recursos \kw{ENTONCES} Determinar recursos
+    disponibles(id\_programacion) $\rightarrow$ recursos; retornar recursos.
+    \item \kw{SINO} Verificar disponibilidad(selección) $\rightarrow$ \texttt{disponible}.
+    \item \kw{SI} \texttt{disponible} \kw{ENTONCES} Registrar asignación(selección) y
+    retornar ``asignación registrada'' \kw{SINO} retornar ``rechazo de asignación''
+    indicando el recurso no disponible.
+\end{logica}
+\end{modspec}
+
+\begin{modspec}{Verificar conflicto de agenda}
+\msdato{Llamado por}{Crear programación, Modificar programación (fan-in).}
+\msdato{Llama a}{Acceder a la base de datos.}
+\msdato{Entradas}{fecha, hora\_inicio, hora\_termino, id\_contenedor. \textbf{Salidas:}
+\texttt{conflicto}.}
+\textbf{Proceso:}
+\begin{logica}
+    \item Leer las programaciones del mismo contenedor o de la misma fecha que no estén
+    ANULADAS ni FINALIZADAS, excluyendo la que se está modificando.
+    \item \texttt{conflicto} = existe alguna con el mismo contenedor, o alguna cuyo intervalo
+    [hora\_inicio, hora\_termino) se intersecta con el nuevo y comparte cuadrilla o jefe
+    tarjador.
+    \item Retornar \texttt{conflicto}.
+\end{logica}
+\end{modspec}
+
+% =========================================================
+\section{Subsistema 4: Ejecutar operación en terreno}
+
+Este subsistema se ejecuta en la aplicación móvil. A diferencia del modelo esencial, el
+diseño incorpora el trabajo sin conexión: cada fotografía se comprime, se sella y se encola
+localmente, y se envía de inmediato si hay señal o al recuperarla.
+
+\tablamodulos{Módulos del subsistema Ejecutar operación en terreno.}{tab:mod-operacion}{%
+Ejecutar operación en terreno & Despachar transacción & registro de terreno & confirmación
+de registro, \texttt{finalizada} & Selecciona la etapa del flujo guiado. \\ \hline
+Leer registro de terreno & Ejecutar operación en terreno & Ninguna & registro & Lee los
+datos e imágenes de la etapa actual. \\ \hline
+Iniciar operación & Ejecutar operación en terreno & datos de inicio & confirmación & Crea la
+operación (4.1). \\ \hline
+Verificar sello & Ejecutar operación en terreno & datos de sello & estado\_sello &
+Compara el sello y exige incidencia si no está intacto (4.2). \\ \hline
+Registrar lote & Ejecutar operación en terreno & datos de lote & confirmación & Identifica
+la línea y coordina el contraste (4.3). \\ \hline
+Contrastar cantidad & Registrar lote & id\_linea, cantidad & diferencia & Acumula lo
+recibido (4.3.2). \\ \hline
+Evaluar diferencia & Registrar lote & diferencia, dano\_visible &
+\texttt{incidencia requerida} & Decide si se exige incidencia (4.3.3). \\ \hline
+Registrar incidencia & Ejecutar operación en terreno & datos de incidencia & id\_incidencia &
+Registra el hallazgo (4.4). \\ \hline
+Registrar evidencia fotográfica & Verificar sello, Registrar lote, Registrar incidencia,
+Cerrar faena & imagen, etapa, referencias & id\_foto & Aplica la regla de evidencia
+obligatoria. \\ \hline
+Cerrar faena & Ejecutar operación en terreno & datos de cierre & \texttt{finalizada} &
+Verifica evidencia, registra faltantes y cierra (4.5). \\ \hline
+Verificar evidencia obligatoria & Cerrar faena & id\_operacion & \texttt{completa}, etapas
+faltantes & Revisa que existan las etapas obligatorias. \\ \hline
+Registrar faltantes & Cerrar faena & líneas incompletas & Ninguna & Crea incidencias
+FALTANTE confirmadas. \\ \hline
+Mostrar confirmación & Ejecutar operación en terreno & confirmación & Ninguna & Indica la
+siguiente etapa del flujo guiado. \\ \hline
+}
+
+\begin{modspec}{Registrar evidencia fotográfica}
+\msdato{Llamado por}{Verificar sello, Registrar lote, Registrar incidencia, Cerrar faena
+(fan-in).}
+\msdato{Llama a}{Comprimir fotografía, Sellar fecha, hora y geoposición, Encolar fotografía.}
+\msdato{Entradas}{imagen, etapa, id\_operacion, (id\_linea), (id\_incidencia).
+\textbf{Salidas:} id\_foto.}
+\textbf{Proceso:}
+\begin{logica}
+    \item \kw{SI} la imagen está vacía o es ilegible \kw{ENTONCES} retornar error: no se
+    permite avanzar sin una fotografía válida.
+    \item Comprimir fotografía(imagen) $\rightarrow$ imagen comprimida.
+    \item Sellar fecha, hora y geoposición(imagen comprimida) $\rightarrow$ fotografía con
+    uuid, fecha\_hora\_captura, latitud y longitud.
+    \item Guardar la fotografía en la base local con estado = PENDIENTE y sus referencias.
+    \item Encolar fotografía(fotografía): si hay conectividad se sube de inmediato y pasa a
+    SUBIDA; si no, permanece en la cola.
+    \item Retornar id\_foto.
+\end{logica}
+\end{modspec}
+
+\begin{modspec}{Cerrar faena}
+\msdato{Llamado por}{Ejecutar operación en terreno.}
+\msdato{Llama a}{Registrar evidencia fotográfica, Verificar evidencia obligatoria,
+Registrar faltantes, Sincronizar pendientes.}
+\msdato{Entradas}{datos de cierre. \textbf{Salidas:} confirmación de registro,
+\texttt{finalizada}.}
+\textbf{Proceso:}
+\begin{logica}
+    \item Registrar evidencia fotográfica(imagen, etapa = CIERRE).
+    \item Verificar evidencia obligatoria(id\_operacion) $\rightarrow$ \texttt{completa};
+    \kw{SI} es falsa, retornar las etapas faltantes con \texttt{finalizada} = falso.
+    \item \kw{SI} hay líneas con cantidad\_recibida $<$ cantidad\_declarada \kw{ENTONCES}
+    pedir confirmación; \kw{SI} se confirma, Registrar faltantes(líneas) \kw{SINO} retornar
+    sin cerrar.
+    \item Sincronizar pendientes $\rightarrow$ cantidad enviada; las fotografías que no
+    puedan enviarse se sincronizarán en segundo plano.
+    \item Registrar hora\_fin y estado = FINALIZADA en la operación y en la programación.
+    \item Retornar \texttt{finalizada} = verdadero.
+\end{logica}
+\end{modspec}
+
+% =========================================================
+\section{Subsistema 5: Validar reporte}
+
+\tablamodulos{Módulos del subsistema Validar reporte.}{tab:mod-validar}{%
+Validar reporte & Despachar transacción & solicitud de validación & reporte para revisión,
+\texttt{aprobado} & Selecciona generar, presentar, aprobar, rechazar o reemplazar. \\ \hline
+Leer solicitud de validación & Validar reporte & Ninguna & solicitud & Lee la acción del
+Supervisor o del jefe tarjador. \\ \hline
+Generar borrador de reporte & Validar reporte & id\_operacion & id\_reporte & Compone y
+guarda el reporte (5.1). \\ \hline
+Obtener datos de la operación & Generar borrador de reporte & id\_operacion & datos &
+Lee operación, sello, incidencias y líneas. \\ \hline
+Ordenar evidencia por etapa y cliente & Generar borrador de reporte & fotografías &
+fotografías ordenadas & Agrupa por etapa y, en lotes, por cliente. \\ \hline
+Presentar reporte & Validar reporte & id\_reporte & reporte & Muestra la bandeja o un
+reporte (5.2). \\ \hline
+Aprobar reporte & Validar reporte & id\_reporte, id\_aprobador & \texttt{aprobado} &
+Aprueba si la evidencia está completa (5.3). \\ \hline
+Verificar evidencia obligatoria & Aprobar reporte & id\_operacion & \texttt{completa} &
+Revisa etapas y rechazos pendientes. \\ \hline
+Registrar aprobación & Aprobar reporte & id\_reporte, id\_aprobador & Ninguna & Cambia el
+estado a APROBADO. \\ \hline
+Rechazar evidencia & Validar reporte & id\_foto, motivo & Ninguna & Rechaza y solicita
+recaptura (5.4). \\ \hline
+Marcar fotografía rechazada & Rechazar evidencia & id\_foto, motivo & Ninguna & Guarda
+RECHAZADA y el motivo. \\ \hline
+Reemplazar evidencia & Validar reporte & id\_foto, imagen & \texttt{corregida} & Registra
+el reemplazo (5.5). \\ \hline
+Registrar fotografía de reemplazo & Reemplazar evidencia & id\_foto, imagen & Ninguna &
+Crea la nueva fotografía y marca la anterior REEMPLAZADA. \\ \hline
+}
+
+\begin{modspec}{Validar reporte}
+\msdato{Llamado por}{Despachar transacción.}
+\msdato{Llama a}{Leer solicitud de validación y, por selección, Generar borrador de reporte,
+Presentar reporte, Aprobar reporte, Rechazar evidencia o Reemplazar evidencia.}
+\msdato{Entradas}{solicitud de validación. \textbf{Salidas:} reporte para revisión,
+\texttt{aprobado}.}
+\textbf{Proceso:}
+\begin{logica}
+    \item Leer solicitud de validación $\rightarrow$ solicitud.
+    \item \kw{SEGÚN} la acción: generar $\rightarrow$ Generar borrador de reporte; revisar
+    $\rightarrow$ Presentar reporte; aprobar $\rightarrow$ Aprobar reporte; rechazar
+    $\rightarrow$ Rechazar evidencia; reemplazar $\rightarrow$ Reemplazar evidencia.
+    \item \kw{SI} Reemplazar evidencia retorna \texttt{corregida} \kw{ENTONCES} Generar
+    borrador de reporte(id\_operacion) para crear la nueva versión.
+    \item Retornar el resultado y, si corresponde, \texttt{aprobado} = verdadero.
+\end{logica}
+\end{modspec}
+
+% =========================================================
+\section{Subsistema 6: Distribuir y consultar reportes}
+
+\tablamodulos{Módulos del subsistema Distribuir y consultar reportes.}{tab:mod-distribuir}{%
+Distribuir y consultar reportes & Despachar transacción & solicitud & resultado &
+Selecciona enviar, consultar o entregar. \\ \hline
+Leer solicitud & Distribuir y consultar reportes & Ninguna & solicitud & Lee la solicitud
+o los filtros. \\ \hline
+Enviar reporte & Distribuir y consultar reportes & id\_reporte & resultado de envío &
+Envía por correo y registra el envío (6.1). \\ \hline
+Obtener destinatarios & Enviar reporte & id\_reporte & destinatarios & Correos de los
+clientes con carga en la operación. \\ \hline
+Registrar envío & Enviar reporte & resultado, destinatarios & Ninguna & Escribe el envío y
+el estado\_envio. \\ \hline
+Consultar operaciones & Distribuir y consultar reportes & consulta de operaciones & listado
+de operaciones & Filtra y, si se pide, cambia el estado (6.2). \\ \hline
+Modificar estado de operación & Consultar operaciones & id\_operacion, nuevo estado &
+Ninguna & Cambia el estado si es una transición válida. \\ \hline
+Filtrar operaciones & Consultar operaciones, Consultar estado del cliente & filtros &
+operaciones & Aplica los filtros y, para clientes, restringe a su carga. \\ \hline
+Consultar estado del cliente & Distribuir y consultar reportes & consulta de estado & estado
+de operaciones & Atiende la consulta del cliente (6.3). \\ \hline
+Entregar reporte PDF & Distribuir y consultar reportes & solicitud de PDF & reporte PDF &
+Entrega el PDF aprobado (6.4). \\ \hline
+Verificar acceso al reporte & Entregar reporte PDF & id\_reporte, id\_cliente &
+\texttt{permitido} & Comprueba estado APROBADO y pertenencia. \\ \hline
+Leer documento PDF & Entregar reporte PDF & id\_reporte & pdf & Recupera el documento
+almacenado. \\ \hline
+Mostrar resultado & Distribuir y consultar reportes & resultado & Ninguna & Presenta el
+listado, el estado o el resultado del envío. \\ \hline
+}
+
+\begin{modspec}{Enviar reporte}
+\msdato{Llamado por}{Distribuir y consultar reportes (envío automático o reenvío).}
+\msdato{Llama a}{Obtener destinatarios, Enviar correo, Registrar envío.}
+\msdato{Entradas}{id\_reporte, origen. \textbf{Salidas:} resultado de envío.}
+\textbf{Proceso:}
+\begin{logica}
+    \item \kw{SI} el reporte no está APROBADO \kw{ENTONCES} retornar ``reporte pendiente de
+    validación''.
+    \item Obtener destinatarios(id\_reporte) $\rightarrow$ destinatarios.
+    \item \kw{SI} destinatarios está vacía \kw{ENTONCES} resultado = FALLIDO, ``completar
+    ficha del cliente''.
+    \item \kw{SINO} Enviar correo(destinatarios, asunto, pdf) $\rightarrow$
+    \texttt{aceptado}; resultado = ENVIADO \kw{SI} \texttt{aceptado} \kw{SINO} FALLIDO.
+    \item Registrar envío(resultado, destinatarios, origen); retornar resultado.
+\end{logica}
+\end{modspec}
+
+% =========================================================
+\section{Módulos predefinidos}
+
+Los módulos predefinidos son servicios de biblioteca o interfaces con sistemas externos que
+el diseño reutiliza (Tabla~\ref{tab:mod-predefinidos}). Corresponden a las clases de servicio
+del Informe 2 y concentran la tecnología que el modelo esencial había abstraído.
+
+{\estilotabla
+\begin{longtable}{|L{3.0cm}|L{3.2cm}|L{3.8cm}|L{4.6cm}|}
+\caption{Módulos predefinidos del diseño.}
+\label{tab:mod-predefinidos}\\
+\hline
+\rowcolor{filacabecera}
+\textbf{Módulo} & \textbf{Entradas / salidas} & \textbf{Función} & \textbf{Implementación
+(Informe 2)} \\ \hline
+\endfirsthead
+\hline
+\rowcolor{filacabecera}
+\textbf{Módulo} & \textbf{Entradas / salidas} & \textbf{Función} & \textbf{Implementación
+(Informe 2)} \\ \hline
+\endhead
+Autenticar usuario & credenciales / \texttt{autenticado}, id\_usuario & Verifica email,
+password\_hash y cuenta activa. & \clase{Usuario}:\newline \textit{iniciarSesion()} \\ \hline
+Acceder a la base de datos & consulta / registros & Lee y escribe en las tablas del modelo
+relacional. & Capa de persistencia \\ \hline
+Validar RUT, Validar email & valor / \texttt{válido} & Verifican formato y dígito
+verificador. & Biblioteca de validación \\ \hline
+Calcular hash de contraseña & password / password\_hash & Genera el resumen criptográfico.
+& \clase{Usuario}:\newline \textit{cambiarPassword()} \\ \hline
+Guardar registro maestro & registro / \texttt{guardado} & Escribe o actualiza un dato
+maestro. & Capa de persistencia \\ \hline
+Descargar XML de Aduanas & nave, viaje, fecha / xml & Consume el web service del Servicio
+Nacional de Aduanas. & \clase{ServicioAduana}:\newline \textit{descargarXML()} \\ \hline
+Notificar a Aduanas & nave, viaje, resultado / -- & Informa el resultado de la
+importación. & \clase{ServicioAduana}:\newline \textit{notificarResultadoImportacion()} \\ \hline
+Comprimir fotografía & imagen / imagen comprimida & Reduce el tamaño antes del envío. &
+\clase{Fotografia}:\newline \textit{comprimir()} \\ \hline
+Sellar fecha, hora y geoposición & imagen / fotografía & Agrega uuid, fecha, hora,
+latitud y longitud. & Servicios del dispositivo móvil \\ \hline
+Encolar fotografía & fotografía / -- & Agrega a la cola local y envía si hay señal. &
+\clase{SincronizadorOffline}:\newline \textit{encolar()} \\ \hline
+Sincronizar pendientes & -- / cantidad enviada & Envía las fotografías encoladas. &
+\clase{SincronizadorOffline}:\newline \textit{sincronizarPendientes()} \\ \hline
+Generar PDF & contenido / pdf & Compila datos y fotografías en el documento. &
+\clase{Reporte}:\newline \textit{generarPDF()} \\ \hline
+Notificar a terreno & solicitud de recaptura / -- & Envía la solicitud a la aplicación
+del jefe tarjador. & \clase{GestorReportes}:\newline \textit{solicitarCorreccionEvidencia()} \\ \hline
+Enviar correo & destinatarios, asunto, pdf / \texttt{aceptado} & Entrega el correo al
+servidor de salida. & \clase{ServicioCorreo}:\newline \textit{enviar()} \\ \hline
+\end{longtable}
+}

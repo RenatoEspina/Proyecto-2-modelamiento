@@ -1,0 +1,132 @@
+\chapter{Modelo relacional}
+\label{cap:relacional}
+
+El modelo relacional traduce el diagrama entidad-relación (Sección~\ref{sec:der}) a un conjunto
+de tablas listas para implementarse en un motor de base de datos relacional
+\parencite{codd1970, elmasri2016}. Se aplicaron las reglas habituales de transformación:
+
+\begin{enumerate}
+    \item Cada \textbf{entidad} se convierte en una tabla, con sus atributos como columnas y su
+    identificador como clave primaria (PK).
+    \item Cada relación \textbf{1:N} se implementa agregando, en la tabla del lado N, una clave
+    foránea (FK) que referencia a la clave primaria del lado 1 (por ejemplo,
+    \texttt{LINEA\_CARGA.id\_contenedor}).
+    \item Cada relación \textbf{1:1} se implementa con una clave foránea con restricción de
+    unicidad en la tabla dependiente (por ejemplo, \texttt{OPERACION.id\_programacion} es FK y
+    única, porque una programación origina una sola operación).
+    \item La relación \textbf{N:M} entre \textsc{rol} y \textsc{permiso} se implementa con la
+    tabla asociativa \texttt{ROL\_PERMISO}, cuya clave primaria compuesta está formada por las
+    dos claves foráneas.
+    \item Las \textbf{participaciones opcionales} del DER se implementan con claves foráneas que
+    admiten nulo (por ejemplo, \texttt{PROGRAMACION.id\_cuadrilla} mientras la faena no está
+    asignada, o \texttt{CONTENEDOR.id\_manifiesto} en tarja ciega).
+\end{enumerate}
+
+\section{Esquema relacional}
+
+A continuación se presenta el esquema en notación textual: la clave primaria va
+\uline{subrayada}, las claves foráneas en \textit{cursiva} con la tabla que referencian, y
+\texttt{?} indica que la columna admite nulo. La columna \texttt{estado} de cada tabla toma su
+dominio del diccionario de datos (\texttt{estado\_faena}, \texttt{estado\_sello},
+\texttt{estado\_foto} o \texttt{estado\_reporte}, según corresponda).
+
+{\small
+\begin{itemize}
+    \item \textbf{ROL}(\uline{id\_rol}, nombre, activo)
+    \item \textbf{PERMISO}(\uline{id\_permiso}, codigo, descripcion)
+    \item \textbf{ROL\_PERMISO}(\uline{\textit{id\_rol}}$\rightarrow$ROL,
+    \uline{\textit{id\_permiso}}$\rightarrow$PERMISO)
+    \item \textbf{CLIENTE}(\uline{id\_cliente}, rut, razon\_social, email, activo)
+    \item \textbf{CUADRILLA}(\uline{id\_cuadrilla}, nombre)
+    \item \textbf{TRABAJADOR}(\uline{id\_trabajador}, rut, nombre, cargo, habilitado,
+    \textit{id\_cuadrilla}?$\rightarrow$CUADRILLA)
+    \item \textbf{USUARIO}(\uline{id\_usuario}, nombre, email, password\_hash, activo,
+    \textit{id\_rol}$\rightarrow$ROL, \textit{id\_trabajador}?$\rightarrow$TRABAJADOR,
+    \textit{id\_cliente}?$\rightarrow$CLIENTE)
+    \item \textbf{TIPO\_BULTO}(\uline{id\_tipo\_bulto}, codigo, nombre, activo)
+    \item \textbf{MANIFIESTO}(\uline{id\_manifiesto}, numero, nave, viaje, fecha\_recepcion)
+    \item \textbf{CONTENEDOR}(\uline{id\_contenedor}, numero, tamano, nro\_sello\_declarado,
+    fecha\_arribo, \textit{id\_manifiesto}?$\rightarrow$MANIFIESTO)
+    \item \textbf{LINEA\_CARGA}(\uline{id\_linea}, descripcion, cantidad\_declarada,
+    cantidad\_recibida, \textit{id\_contenedor}$\rightarrow$CONTENEDOR,
+    \textit{id\_cliente}$\rightarrow$CLIENTE, \textit{id\_tipo\_bulto}$\rightarrow$TIPO\_BULTO)
+    \item \textbf{PROGRAMACION}(\uline{id\_programacion}, fecha, hora\_inicio, hora\_termino,
+    estado, \textit{id\_contenedor}$\rightarrow$CONTENEDOR,
+    \textit{id\_cuadrilla}?$\rightarrow$CUADRILLA,
+    \textit{id\_jefe\_tarjador}?$\rightarrow$TRABAJADOR)
+    \item \textbf{OPERACION}(\uline{id\_operacion}, hora\_inicio, hora\_fin?, estado,
+    modalidad\_ingreso, \textit{id\_programacion}$\rightarrow$PROGRAMACION)
+    \item \textbf{SELLO\_SEGURIDAD}(\uline{id\_sello}, numero\_digitado, estado,
+    fecha\_verificacion, \textit{id\_operacion}$\rightarrow$OPERACION)
+    \item \textbf{INCIDENCIA}(\uline{id\_incidencia}, tipo, descripcion, cantidad\_afectada,
+    fecha\_hora, \textit{id\_operacion}$\rightarrow$OPERACION,
+    \textit{id\_linea}?$\rightarrow$LINEA\_CARGA)
+    \item \textbf{FOTOGRAFIA}(\uline{id\_foto}, uuid, etapa, fecha\_hora\_captura, latitud,
+    longitud, url?, estado, motivo\_rechazo?, \textit{id\_operacion}$\rightarrow$OPERACION,
+    \textit{id\_linea}?$\rightarrow$LINEA\_CARGA,
+    \textit{id\_incidencia}?$\rightarrow$INCIDENCIA)
+    \item \textbf{REPORTE}(\uline{id\_reporte}, folio, version, estado, fecha\_generacion,
+    fecha\_aprobacion?, estado\_envio, documento\_pdf,
+    \textit{id\_operacion}$\rightarrow$OPERACION, \textit{id\_aprobador}?$\rightarrow$USUARIO)
+    \item \textbf{ENVIO\_REPORTE}(\uline{id\_envio}, fecha\_hora, destinatarios, origen,
+    resultado, \textit{id\_reporte}$\rightarrow$REPORTE)
+\end{itemize}
+}
+
+La Figura~\ref{fig:relacional} muestra las mismas tablas y sus claves foráneas; cada flecha
+va desde la tabla que contiene la clave foránea hacia la tabla referenciada.
+
+\diagramaapaisado{relacional}
+    {Modelo relacional}
+    {Modelo relacional del sistema BeeTracer.}
+    {fig:relacional}
+
+\section{Restricciones de integridad}
+
+Además de las claves primarias y foráneas, el modelo incorpora las restricciones de la
+Tabla~\ref{tab:restricciones}, que llevan a la base de datos las reglas de negocio
+identificadas en las mini especificaciones.
+
+{\estilotabla
+\begin{longtable}{|L{3.4cm}|L{11.2cm}|}
+\caption{Restricciones de integridad del modelo relacional.}
+\label{tab:restricciones}\\
+\hline
+\rowcolor{filacabecera}
+\textbf{Tabla} & \textbf{Restricción} \\ \hline
+\endfirsthead
+\hline
+\rowcolor{filacabecera}
+\textbf{Tabla} & \textbf{Restricción} \\ \hline
+\endhead
+USUARIO & \texttt{email} único. Si el rol es de jefe tarjador, \texttt{id\_trabajador} no
+es nulo y es único; si es de cliente, \texttt{id\_cliente} no es nulo. \\ \hline
+CLIENTE, TRABAJADOR & \texttt{rut} único y con formato válido (dominio \texttt{rut}). \\
+\hline
+PERMISO, TIPO\_BULTO & \texttt{codigo} único. \\ \hline
+MANIFIESTO & Par (\texttt{nave}, \texttt{viaje}) único: un viaje se importa una sola vez. \\
+\hline
+CONTENEDOR & \texttt{numero} con formato ISO 6346; \texttt{tamano} $\in$ \{20, 40\}. \\
+\hline
+LINEA\_CARGA & \texttt{cantidad\_declarada} $\geq 1$; \texttt{cantidad\_recibida}
+$\geq 0$. \\ \hline
+PROGRAMACION & \texttt{id\_contenedor} único (un contenedor tiene una sola programación);
+\texttt{hora\_inicio} $<$ \texttt{hora\_termino}; \texttt{estado} $\in$
+\texttt{estado\_faena}. \\ \hline
+OPERACION & \texttt{id\_programacion} único; \texttt{hora\_fin} no nulo cuando
+\texttt{estado} = FINALIZADA. \\ \hline
+SELLO\_SEGURIDAD & \texttt{id\_operacion} único (un sello por operación). \\ \hline
+INCIDENCIA & \texttt{id\_linea} nulo solo si \texttt{tipo} = SELLO\_ALTERADO;
+\texttt{cantidad\_afectada} $\geq 1$. \\ \hline
+FOTOGRAFIA & \texttt{uuid} único; \texttt{id\_linea} no nulo si \texttt{etapa} = LOTE;
+\texttt{id\_incidencia} no nulo si \texttt{etapa} = INCIDENCIA;
+\texttt{motivo\_rechazo} no nulo si \texttt{estado} = RECHAZADA. \\ \hline
+REPORTE & \texttt{folio} único; \texttt{id\_operacion} único; \texttt{version} $\geq 1$;
+\texttt{id\_aprobador} y \texttt{fecha\_aprobacion} no nulos si \texttt{estado} =
+APROBADO. \\ \hline
+Borrado (todas) & Las claves foráneas usan \texttt{ON DELETE RESTRICT}: un registro
+referenciado no puede eliminarse físicamente, y los datos maestros usados se desactivan
+(eliminación lógica). La única excepción es \texttt{ROL\_PERMISO}, que usa \texttt{ON
+DELETE CASCADE} al eliminar un rol sin usuarios. \\ \hline
+\end{longtable}
+}

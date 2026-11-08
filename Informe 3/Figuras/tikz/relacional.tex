@@ -1,0 +1,51 @@
+% Modelo relacional: tablas, claves primarias (subrayadas) y foráneas (FK)
+\begin{tikzpicture}[font = \scriptsize, tabla/.append style = {anchor = north,
+        minimum width = 3.3cm, font = \scriptsize}]
+    % Fila 1
+    \node[tabla] (PER) at ( 0, 0) {\textbf{PERMISO}\nodepart{two}\pk{id\_permiso}\\codigo\\descripcion};
+    \node[tabla] (ROL) at ( 5, 0) {\textbf{ROL}\nodepart{two}\pk{id\_rol}\\nombre\\activo};
+    \node[tabla] (USU) at (10, 0) {\textbf{USUARIO}\nodepart{two}\pk{id\_usuario}\\nombre\\email\\password\_hash\\activo\\\fk{id\_rol}\\\fk{id\_trabajador}\\\fk{id\_cliente}};
+    \node[tabla] (REP) at (15, 0) {\textbf{REPORTE}\nodepart{two}\pk{id\_reporte}\\folio\\version\\estado\\fecha\_generacion\\fecha\_aprobacion\\estado\_envio\\documento\_pdf\\\fk{id\_operacion}\\\fk{id\_aprobador}};
+    \node[tabla] (ENV) at (20, 0) {\textbf{ENVIO\_REPORTE}\nodepart{two}\pk{id\_envio}\\fecha\_hora\\destinatarios\\origen\\resultado\\\fk{id\_reporte}};
+    \node[tabla] (RP)  at (2.5, -1.9) {\textbf{ROL\_PERMISO}\nodepart{two}\pk{\fk{id\_rol}}\\\pk{\fk{id\_permiso}}};
+    % Fila 2
+    \node[tabla] (CLI) at ( 0, -4.8) {\textbf{CLIENTE}\nodepart{two}\pk{id\_cliente}\\rut\\razon\_social\\email\\activo};
+    \node[tabla] (TRA) at ( 5, -4.8) {\textbf{TRABAJADOR}\nodepart{two}\pk{id\_trabajador}\\rut\\nombre\\cargo\\habilitado\\\fk{id\_cuadrilla}};
+    \node[tabla] (PRO) at (10, -4.8) {\textbf{PROGRAMACION}\nodepart{two}\pk{id\_programacion}\\fecha\\hora\_inicio\\hora\_termino\\estado\\\fk{id\_contenedor}\\\fk{id\_cuadrilla}\\\fk{id\_jefe\_tarjador}};
+    \node[tabla] (OPE) at (15, -4.8) {\textbf{OPERACION}\nodepart{two}\pk{id\_operacion}\\hora\_inicio\\hora\_fin\\estado\\modalidad\_ingreso\\\fk{id\_programacion}};
+    \node[tabla] (SEL) at (20, -4.8) {\textbf{SELLO\_SEGURIDAD}\nodepart{two}\pk{id\_sello}\\numero\_digitado\\estado\\fecha\_verificacion\\\fk{id\_operacion}};
+    % Fila 3
+    \node[tabla] (TIP) at ( 0, -9.2) {\textbf{TIPO\_BULTO}\nodepart{two}\pk{id\_tipo\_bulto}\\codigo\\nombre\\activo};
+    \node[tabla] (CUA) at ( 5, -9.2) {\textbf{CUADRILLA}\nodepart{two}\pk{id\_cuadrilla}\\nombre};
+    \node[tabla] (CON) at (10, -9.2) {\textbf{CONTENEDOR}\nodepart{two}\pk{id\_contenedor}\\numero\\tamano\\nro\_sello\_declarado\\fecha\_arribo\\\fk{id\_manifiesto}};
+    \node[tabla] (INC) at (15, -9.2) {\textbf{INCIDENCIA}\nodepart{two}\pk{id\_incidencia}\\tipo\\descripcion\\cantidad\_afectada\\fecha\_hora\\\fk{id\_operacion}\\\fk{id\_linea}};
+    \node[tabla] (FOT) at (20, -9.2) {\textbf{FOTOGRAFIA}\nodepart{two}\pk{id\_foto}\\uuid\\etapa\\fecha\_hora\_captura\\latitud\\longitud\\url\\estado\\motivo\_rechazo\\\fk{id\_operacion}\\\fk{id\_linea}\\\fk{id\_incidencia}};
+    % Fila 4
+    \node[tabla] (LIN) at ( 4.6, -13.6) {\textbf{LINEA\_CARGA}\nodepart{two}\pk{id\_linea}\\descripcion\\cantidad\_declarada\\cantidad\_recibida\\\fk{id\_contenedor}\\\fk{id\_cliente}\\\fk{id\_tipo\_bulto}};
+    \node[tabla] (MAN) at (10, -13.6) {\textbf{MANIFIESTO}\nodepart{two}\pk{id\_manifiesto}\\numero\\nave\\viaje\\fecha\_recepcion};
+
+    % Claves foráneas (desde la tabla que contiene la FK hacia la tabla referenciada)
+    \draw[fk] (RP) -- (PER);
+    \draw[fk] (RP) -- (ROL);
+    \draw[fk] (USU.west) -- (ROL.east);
+    \draw[fk] (USU) -- (TRA);
+    \draw[fk] (USU) -- (CLI);
+    \draw[fk] (REP.west) -- (USU.east);
+    \draw[fk] (REP) -- (OPE);
+    \draw[fk] (ENV.west) -- (REP.east);
+    \draw[fk] (TRA) -- (CUA);
+    \draw[fk] (PRO.west) -- (TRA.east);
+    \draw[fk] (PRO) -- (CUA);
+    \draw[fk] (PRO) -- (CON);
+    \draw[fk] (OPE.west) -- (PRO.east);
+    \draw[fk] (SEL.west) -- (OPE.east);
+    \draw[fk] (INC) -- (OPE);
+    \draw[fk] (FOT) -- (OPE);
+    \draw[fk] (FOT.west) -- (INC.east);
+    \draw[fk] (CON) -- (MAN);
+    \draw[fk] (LIN) -- (CON);
+    \draw[fk] (LIN) -- (TIP);
+    \draw[fk] (INC) -- (LIN);
+    \draw[fk] (LIN.west) -| ++(-6.4, 0) |- (CLI.west);
+    \draw[fk] (FOT.south) |- ($(LIN.south) + (0, -0.5)$) -- (LIN.south);
+\end{tikzpicture}

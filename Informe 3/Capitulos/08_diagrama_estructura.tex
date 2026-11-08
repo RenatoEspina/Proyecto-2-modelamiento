@@ -1,0 +1,144 @@
+\chapter{Diagrama de estructura}
+\label{cap:estructura}
+
+El diagrama de estructura traduce el modelo esencial del análisis en una arquitectura
+modular implementable: muestra los módulos del programa, la jerarquía de llamadas entre ellos
+y los datos que se intercambian en cada llamada \parencite{yourdon1979, pagejones1988}. Se
+dibuja con la notación de Yourdon y Constantine (Figura~\ref{fig:de-notacion}):
+
+\begin{itemize}
+    \item Cada \textbf{módulo} es un rectángulo; los \textbf{módulos predefinidos} (de
+    biblioteca o de servicios externos ya existentes) llevan una doble barra vertical a cada
+    lado.
+    \item Una flecha de un módulo a otro es una \textbf{llamada}: el módulo superior invoca al
+    subordinado y recupera el control cuando este termina.
+    \item Las flechas cortas con un círculo vacío son \textbf{acoplamientos de datos} y las de
+    círculo relleno son \textbf{acoplamientos de control} (banderas); su sentido indica si
+    el dato baja hacia el subordinado o sube hacia el superior.
+    \item El \textbf{rombo} en la base de un módulo indica una \textbf{selección}: según el tipo
+    de transacción, se invoca solo uno de los módulos que parten de él.
+    \item Un módulo con varias flechas de entrada tiene \textbf{fan-in}: se reutiliza desde
+    varios módulos superiores y se dibuja una sola vez.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[y = 1.2cm]
+        \node[modulo] (A) at (0, 0) {Módulo superior};
+        \node[modulo] (B) at (-2.6, -2.2) {Módulo\\subordinado};
+        \node[predefinido] (C) at (2.6, -2.2) {Módulo\\predefinido};
+        \conecta{A.south}{B.north} \baja{A.south}{B.north}{dato}
+        \conecta{A.south}{C.north} \sube[control]{A.south}{C.north}{bandera}
+        \node[modulo] (D) at (8.0, 0) {Centro de\\transacción};
+        \node[seleccion] (SD) at (D.south) {};
+        \node[modulo] (E) at (6.6, -2.2) {Transacción A};
+        \node[modulo] (F) at (9.4, -2.2) {Transacción B};
+        \draw[llamada] (SD.south) -- (E.north);
+        \draw[llamada] (SD.south) -- (F.north);
+    \end{tikzpicture}
+    \caption[Notación del diagrama de estructura]{Notación del diagrama de estructura
+    utilizada: llamada, acoplamiento de datos, bandera de control, módulo predefinido y
+    selección.}
+    \label{fig:de-notacion}
+\end{figure}
+
+% =========================================================
+\section{Derivación desde los diagramas de flujo de datos}
+
+La arquitectura se obtuvo aplicando las dos estrategias clásicas del diseño estructurado
+sobre los DFD de la Parte~1:
+
+\begin{itemize}
+    \item \textbf{Análisis de transacción.} El DFD de nivel~0 muestra que BeeTracer no procesa
+    un único flujo, sino seis tipos de solicitud independientes, una por cada proceso
+    principal. Por ello el módulo principal se diseñó como un \emph{centro de transacción}
+    (Figura~\ref{fig:de-general}): obtiene y autentica la solicitud, la despacha al subsistema
+    que corresponde y muestra el resultado. Cada subsistema equivale a un proceso del nivel~0
+    y conserva su nombre, lo que mantiene la trazabilidad entre análisis y diseño. Los
+    subsistemas 1, 3, 4, 5 y 6 repiten el mismo patrón internamente, porque sus DFD de
+    nivel~1 también reciben acontecimientos distintos que activan subprocesos distintos.
+    \item \textbf{Análisis de transformación.} El subsistema Importar manifiesto
+    (Figura~\ref{fig:de-importar}) sí tiene un flujo principal único que se transforma por
+    etapas, por lo que se dividió en una rama \emph{aferente} (obtener el manifiesto
+    válido: leer la solicitud, verificar duplicados, descargar el XML y validarlo), un
+    \emph{centro de transformación} (registrar el manifiesto, que corresponde al DFD de
+    nivel~2 del proceso 2.3) y una rama \emph{eferente} (emitir el resultado: reporte de
+    errores, notificación a Aduanas y resumen).
+\end{itemize}
+
+Los procesos elementales de los DFD se convirtieron, en general, en módulos subordinados con
+el mismo nombre (por ejemplo, \este{Contrastar cantidad} y \este{Evaluar diferencia} provienen
+de los procesos 4.3.2 y 4.3.3). Además, aparecen módulos que no existían en el análisis
+porque corresponden a la \textbf{tecnología de implementación} que el modelo esencial
+excluyó: \este{Comprimir fotografía}, \este{Sellar fecha, hora y geoposición},
+\este{Encolar fotografía} y \este{Sincronizar pendientes} resuelven el trabajo sin conexión en
+el patio; \este{Descargar XML de Aduanas} y \este{Notificar a Aduanas} encapsulan el web
+service del Servicio Nacional de Aduanas; \este{Enviar correo} encapsula el servidor de
+correo; y \este{Generar PDF}, \este{Calcular hash de contraseña}, \este{Autenticar usuario} y
+\este{Acceder a la base de datos} son servicios de biblioteca. Estos módulos corresponden a
+las clases de servicio del Informe 2 (\clase{ServicioAduana}, \clase{ServicioCorreo} y
+\clase{SincronizadorOffline}).
+
+% =========================================================
+\section{Criterios de calidad del diseño}
+
+El diseño se evaluó con los criterios de acoplamiento y cohesión de
+\textcite{yourdon1979}:
+
+\begin{itemize}
+    \item \textbf{Acoplamiento bajo.} Los módulos se comunican casi exclusivamente mediante
+    acoplamientos de datos (identificadores, imágenes, listas) y no comparten datos
+    globales. Las banderas de control se limitan a informar resultados hacia arriba
+    (\este{válido}, \este{disponible}, \este{completa}, \este{autenticado}), nunca a indicar
+    al subordinado qué hacer, lo que evita el acoplamiento de control descendente.
+    \item \textbf{Cohesión funcional.} Cada módulo realiza una sola función que puede
+    describirse con un verbo y un objeto. Por ejemplo, \este{Verificar disponibilidad} solo
+    verifica y no registra; el registro lo hace \este{Registrar asignación}.
+    \item \textbf{Fan-in en lugar de duplicación.} La lógica que se repite en varios casos se
+    concentra en un solo módulo reutilizado: \este{Registrar evidencia fotográfica} es
+    invocado por los cuatro módulos que capturan fotografías, lo que garantiza que la regla
+    de evidencia obligatoria se aplique de la misma forma en todas las etapas;
+    \este{Guardar registro maestro}, \este{Verificar conflicto de agenda} y
+    \este{Filtrar operaciones} cumplen el mismo papel en sus subsistemas.
+    \item \textbf{Fan-out acotado.} Los módulos invocan a siete subordinados o menos, con
+    una excepción justificada: \este{Administrar datos maestros} tiene ocho, pero cinco de
+    ellos son alternativas excluyentes de una misma selección y en cada transacción solo se
+    ejecuta una. Cuando un subsistema crecía, se agregó un nivel intermedio (por ejemplo,
+    \este{Obtener manifiesto válido} o \este{Registrar manifiesto}).
+\end{itemize}
+
+% =========================================================
+\section{Diagramas}
+
+A continuación se presentan el panorama general y el diagrama de cada uno de los seis
+subsistemas. En las llamadas que se repiten con los mismos acoplamientos (por ejemplo, las
+cinco llamadas a \este{Guardar registro maestro}), estos se dibujan una sola vez.
+
+\diagramaapaisado{de_general}
+    {Diagrama de estructura - Panorama general}
+    {Diagrama de estructura - Panorama general (centro de transacción).}
+    {fig:de-general}
+\diagramaapaisado{de_maestros}
+    {Diagrama de estructura - Administrar datos maestros}
+    {Diagrama de estructura - Subsistema 1: Administrar datos maestros.}
+    {fig:de-maestros}
+\diagramaapaisado{de_importar}
+    {Diagrama de estructura - Importar manifiesto}
+    {Diagrama de estructura - Subsistema 2: Importar manifiesto (análisis de transformación).}
+    {fig:de-importar}
+\diagramaapaisado{de_programar}
+    {Diagrama de estructura - Programar faenas}
+    {Diagrama de estructura - Subsistema 3: Programar faenas.}
+    {fig:de-programar}
+\diagramaapaisado{de_operacion}
+    {Diagrama de estructura - Ejecutar operación en terreno}
+    {Diagrama de estructura - Subsistema 4: Ejecutar operación en terreno (aplicación móvil).}
+    {fig:de-operacion}
+\diagramaapaisado{de_validar}
+    {Diagrama de estructura - Validar reporte}
+    {Diagrama de estructura - Subsistema 5: Validar reporte.}
+    {fig:de-validar}
+\diagramaapaisado{de_distribuir}
+    {Diagrama de estructura - Distribuir y consultar reportes}
+    {Diagrama de estructura - Subsistema 6: Distribuir y consultar reportes.}
+    {fig:de-distribuir}

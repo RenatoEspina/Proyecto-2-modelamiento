@@ -1,0 +1,30 @@
+% Diagrama de estructura - panorama general (análisis de transacción)
+\begin{tikzpicture}[y = 1.4cm]
+    \node[modulo = 2.4cm] (S) at (0, 0) {\textbf{Sistema BeeTracer}};
+    \coordinate (SL) at ($(S.south)!0.7!(S.south west)$);
+    \coordinate (SR) at ($(S.south)!0.7!(S.south east)$);
+    \node[modulo] (OT) at (-7.6, -2.9) {Obtener\\transacción};
+    \node[modulo] (DT) at ( 0.0, -2.9) {Despachar\\transacción};
+    \node[modulo] (MR) at ( 7.6, -2.9) {Mostrar\\resultado};
+    \node[modulo] (LS) at (-9.8, -5.6) {Leer\\solicitud};
+    \node[predefinido] (AU) at (-5.4, -5.6) {Autenticar\\usuario};
+    \node[modulo] (T1) at (-6.25, -7.4) {Administrar\\datos maestros};
+    \node[modulo] (T2) at (-3.75, -7.4) {Importar\\manifiesto};
+    \node[modulo] (T3) at (-1.25, -7.4) {Programar\\faenas};
+    \node[modulo] (T4) at ( 1.25, -7.4) {Ejecutar operación\\en terreno};
+    \node[modulo] (T5) at ( 3.75, -7.4) {Validar\\reporte};
+    \node[modulo] (T6) at ( 6.25, -7.4) {Distribuir y\\consultar reportes};
+    \node[predefinido] (BD) at (0, -10.4) {Acceder a la\\base de datos};
+
+    \conecta{SL}{OT.north} \sube{SL}{OT.north}{solicitud}
+    \conecta{S.south}{DT.north} \baja{S.south}{DT.north}{solicitud} \sube{S.south}{DT.north}{resultado}
+    \conecta{SR}{MR.north} \baja{SR}{MR.north}{resultado}
+    \conecta{OT.south}{LS.north} \sube{OT.south}{LS.north}{solicitud}
+    \conecta{OT.south}{AU.north} \baja{OT.south}{AU.north}{credenciales}
+    \sube[control]{OT.south}{AU.north}{autenticado}
+    \node[seleccion] (SEL) at (DT.south) {};
+    \foreach \t in {T1, T2, T3, T4, T5, T6} { \draw[llamada] (SEL.south) -- (\t.north); }
+    \baja{SEL.south}{T1.north}{solicitud}
+    \sube{SEL.south}{T6.north}{resultado}
+    \foreach \t in {T1, T2, T3, T4, T5, T6} { \draw[llamada] (\t.south) -- (BD.north); }
+\end{tikzpicture}

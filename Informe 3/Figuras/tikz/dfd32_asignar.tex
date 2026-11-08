@@ -1,0 +1,29 @@
+% DFD de nivel 2 — Proceso 3.2: Asignar cuadrilla y jefe tarjador
+\begin{tikzpicture}[font = \footnotesize,
+    etq/.append style = {font = \footnotesize},
+    proceso/.append style = {font = \footnotesize},
+    terminador/.append style = {font = \footnotesize\bfseries},
+    almacen/.append style = {font = \footnotesize}]
+    \node[terminador, minimum height = 3.0cm] (JF) at (-8.4, 0.6) {Jefe de faena};
+    \node[terminador] (JFb) at (-4.6, -6.2) {Jefe de faena*};
+
+    \node[proceso = 2.5cm] (P1) at (-1.0,  3.8) {\proc{3.2.1}{Determinar\\recursos\\disponibles}};
+    \node[proceso = 2.5cm] (P2) at (-1.0, -2.6) {\proc{3.2.2}{Verificar\\disponibilidad}};
+    \node[proceso = 2.5cm] (P3) at ( 6.4, -2.6) {\proc{3.2.3}{Registrar\\asignación}};
+
+    \node[almacen] (D3) at (-2.6, 0.6) {D3 Trabajadores};
+    \node[almacen] (D6) at ( 1.2, 0.6) {D6 Programaciones};
+
+    \coordinate (j1) at ($(JF.east) + (0, 0.9)$);
+    \coordinate (j2) at ($(JF.east) + (0, -0.9)$);
+    \parflujo{j1}{P1.195}{solicitud de\\recursos}{recursos\\disponibles}{0.5}{0.5}
+    \parflujo{j2}{P2.165}{selección de\\recursos}{rechazo de\\asignación}{0.5}{0.5}
+    \draw[flujo] (P2.east) -- node[etq, above, pos = 0.5] {asignación\\válida} (P3.west);
+    \draw[flujo] (P3.-150) -- node[etq, below right = -1pt, pos = 0.5] {asignación registrada} (JFb.east);
+
+    \draw[flujo] (D3.north) -- (P1);
+    \draw[flujo] (D6.north) -- (P1);
+    \draw[flujo] (D3.south) -- (P2);
+    \draw[flujo] (D6.south) -- (P2);
+    \draw[flujorw] (D6.east) -- (P3);
+\end{tikzpicture}

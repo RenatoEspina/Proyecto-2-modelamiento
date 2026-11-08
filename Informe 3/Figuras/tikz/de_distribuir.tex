@@ -1,0 +1,38 @@
+% Diagrama de estructura - Subsistema 6: Distribuir y consultar reportes (análisis de transacción)
+\begin{tikzpicture}[y = 1.4cm]
+    \node[modulo = 3.6cm] (S) at (0, 0) {\textbf{Distribuir y consultar reportes}};
+    \coordinate (SL) at ($(S.south)!0.7!(S.south west)$);
+    \coordinate (SR) at ($(S.south)!0.7!(S.south east)$);
+    \node[modulo] (LS) at (-10.0, -2.9) {Leer\\solicitud};
+    \node[modulo] (ER) at (-5.8, -2.9) {Enviar\\reporte};
+    \node[modulo] (CO) at (-0.6, -2.9) {Consultar\\operaciones};
+    \node[modulo] (CE) at ( 3.6, -2.9) {Consultar estado\\del cliente};
+    \node[modulo] (EP) at ( 7.4, -2.9) {Entregar\\reporte PDF};
+    \node[modulo] (MR) at (10.4, -2.9) {Mostrar\\resultado};
+    \node[modulo] (OD) at (-8.4, -5.9) {Obtener\\destinatarios};
+    \node[predefinido] (EC) at (-5.9, -5.9) {Enviar\\correo};
+    \node[modulo] (RG) at (-3.4, -5.9) {Registrar\\envío};
+    \node[modulo] (ME) at (-0.9, -5.9) {Modificar estado\\de operación};
+    \node[modulo] (FO) at ( 1.6, -5.9) {Filtrar\\operaciones};
+    \node[predefinido] (AU) at ( 4.4, -5.9) {Autenticar\\usuario};
+    \node[modulo] (VA) at ( 6.9, -5.9) {Verificar acceso\\al reporte};
+    \node[modulo] (LP) at ( 9.4, -5.9) {Leer documento\\PDF};
+
+    \conecta{SL}{LS.north} \sube{SL}{LS.north}{solicitud}
+    \node[seleccion] (SEL) at (S.south) {};
+    \foreach \m in {ER, CO, CE, EP} { \draw[llamada] (SEL.south) -- (\m.north); }
+    \baja{SEL.south}{ER.north}{id\_reporte}
+    \sube{SEL.south}{ER.north}{resultado\\de envío}
+    \sube{SEL.south}{CE.north}{estado de\\operaciones}
+    \conecta{SR}{MR.north} \baja{SR}{MR.north}{resultado}
+    \conecta{ER.south}{OD.north} \sube{ER.south}{OD.north}{destinatarios}
+    \conecta{ER.south}{EC.north} \baja{ER.south}{EC.north}{pdf}
+    \sube[control]{ER.south}{EC.north}{aceptado}
+    \conecta{ER.south}{RG.north} \baja{ER.south}{RG.north}{resultado}
+    \conecta{CO.south}{ME.north} \baja{CO.south}{ME.north}{nuevo estado}
+    \conecta{CO.south}{FO.north} \baja{CO.south}{FO.north}{filtros}
+    \conecta{CE.south}{FO.north} \sube{CE.south}{FO.north}{operaciones}
+    \conecta{CE.south}{AU.north} \sube[control]{CE.south}{AU.north}{autenticado}
+    \conecta{EP.south}{VA.north} \sube[control]{EP.south}{VA.north}{permitido}
+    \conecta{EP.south}{LP.north} \sube{EP.south}{LP.north}{pdf}
+\end{tikzpicture}

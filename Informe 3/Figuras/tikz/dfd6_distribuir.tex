@@ -1,0 +1,52 @@
+% DFD de nivel 1 — Proceso 6: Distribuir y consultar reportes
+\begin{tikzpicture}[font = \footnotesize,
+    etq/.append style = {font = \footnotesize},
+    proceso/.append style = {font = \footnotesize},
+    terminador/.append style = {font = \footnotesize\bfseries},
+    almacen/.append style = {font = \footnotesize}]
+    \node[terminador] (SUP) at (-9.0,  6.2) {Supervisor\\del reporte};
+    \node[terminador, minimum height = 3.6cm] (JF) at (-9.0, 0.6) {Jefe de faena};
+    \node[terminador, minimum height = 3.6cm] (CLI) at (12.6, 1.0) {Cliente\\del depósito};
+    \node[terminador] (CLIb) at ( 3.2,  9.0) {Cliente\\del depósito*};
+
+    \node[proceso = 2.4cm] (P61) at (-3.0,  4.6) {\proc{6.1}{Enviar\\reporte}};
+    \node[proceso = 2.4cm] (P62) at (-3.0, -2.6) {\proc{6.2}{Consultar\\operaciones}};
+    \node[proceso = 2.4cm] (P63) at ( 6.4, -2.6) {\proc{6.3}{Consultar\\estado del\\cliente}};
+    \node[proceso = 2.4cm] (P64) at ( 6.4,  4.6) {\proc{6.4}{Entregar\\reporte PDF}};
+
+    \node[almacen] (D9) at ( 1.7,  1.0) {D9 Reportes};
+    \node[almacen] (D2) at (-5.9,  9.6) {D2 Clientes};
+    \node[almacen] (D5b) at (-9.9,  8.8) {D5* Manifiestos};
+    \node[almacen] (D7) at ( 1.7, -2.6) {D7 Operaciones};
+    \node[almacen] (D6) at ( 1.7, -4.9) {D6 Programaciones};
+    \node[almacen] (D5) at ( 1.7, -6.5) {D5 Manifiestos};
+    \node[almacen] (D1) at ( 9.8, -6.2) {D1 Usuarios};
+
+    \node[font = \footnotesize\itshape, align = center] (H5) at (-3.0, 9.4) {desde el\\proceso 5};
+    \draw[flujo] (H5.south) -- node[etq, right = 1pt, pos = 0.5] {reporte\\aprobado} (P61.north);
+
+    \draw[flujo] (P61.170) -- node[etq, above, pos = 0.5] {resultado\\de envío} (SUP.-20);
+    \coordinate (j1) at ($(JF.east) + (0, 1.1)$);
+    \coordinate (j2) at ($(JF.east) + (0, -1.1)$);
+    \parflujo{j1}{P61.205}{solicitud de\\reenvío}{resultado\\de envío}{0.45}{0.3}
+    \parflujo{j2}{P62.160}{consulta de\\operaciones}{listado de\\operaciones}{0.45}{0.3}
+    \draw[flujo] (P61.45) -- node[etq, above left = -1pt, pos = 0.5] {reporte\\PDF} (CLIb.west);
+    \coordinate (c1) at ($(CLI.west) + (0, 1.1)$);
+    \coordinate (c2) at ($(CLI.west) + (0, -1.1)$);
+    \parflujo{c1}{P64.-20}{solicitud\\de PDF}{reporte\\PDF}{0.45}{0.3}
+    \parflujo{c2}{P63.20}{consulta de\\estado}{estado de\\operaciones}{0.45}{0.3}
+
+    \draw[flujorw] (P61) -- (D9.north west);
+    \draw[flujo] (D2.south) -- (P61);
+    \draw[flujo] (D5b.east) -- (P61);
+    \draw[flujo] (D9.south west) -- (P62);
+    \draw[flujorw] (D7.west) -- (P62);
+    \draw[flujo] (D6.west) -- (P62);
+    \draw[flujo] (D5.west) -- (P62);
+    \draw[flujo] (D9.south east) -- (P63);
+    \draw[flujo] (D7.east) -- (P63);
+    \draw[flujo] (D6.east) -- (P63);
+    \draw[flujo] (D5.east) -- (P63);
+    \draw[flujo] (D1.north) -- (P63);
+    \draw[flujo] (D9.north east) -- (P64);
+\end{tikzpicture}

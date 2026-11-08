@@ -1,0 +1,61 @@
+\chapter{Descripción general}
+\label{cap:descripcion}
+
+BeeTracer es una plataforma de trazabilidad logística desarrollada por Bilix Ingeniería
+(Valparaíso) que digitaliza el ciclo de una operación de desconsolidado en terminales
+extraportuarios y bodegas. El comercio exterior chileno opera mayoritariamente con carga
+consolidada: la mercancía de varios importadores pequeños viaja en un mismo contenedor, se
+declara en un manifiesto electrónico que la nave transmite al Servicio Nacional de Aduanas y,
+como el puerto no tiene espacio para abrir contenedores, se separa por cliente en un puerto
+seco. Ese momento, el desconsolidado, es donde la custodia de la carga cambia de manos varias
+veces en pocas horas y donde históricamente la información se registraba de forma más
+precaria: planillas en papel, fotografías dispersas en teléfonos personales y ninguna prueba
+del estado de la carga al abrir el contenedor.
+
+La propuesta central de BeeTracer es la \textbf{evidencia fotográfica obligatoria}: la
+aplicación no permite avanzar de una etapa del desconsolidado a la siguiente sin capturar el
+registro visual correspondiente, de modo que al cerrar la faena existe un expediente completo y
+verificable. El sistema tiene una arquitectura cliente-servidor con dos componentes:
+
+\begin{itemize}
+    \item \textbf{Plataforma web}, usada desde la oficina para configurar los datos maestros,
+    importar manifiestos, programar faenas, validar reportes y consultar el estado de las
+    operaciones.
+    \item \textbf{Aplicación móvil}, usada en el patio por el jefe tarjador para registrar el
+    sello, los lotes separados por cliente, las incidencias y las fotografías. Funciona sin
+    conexión y sincroniza la información cuando recupera señal.
+\end{itemize}
+
+Desde la perspectiva estructurada, el sistema se entiende como una red de procesos que
+transforman flujos de datos. El ciclo completo se descompone en seis procesos principales,
+que serán la base de los diagramas de flujo de datos y, más adelante, de los subsistemas del
+diagrama de estructura:
+
+\begin{enumerate}
+    \item \textbf{Administrar datos maestros}: el Administrador del depósito mantiene los
+    usuarios, roles y permisos, tipos de bulto, clientes, trabajadores y cuadrillas.
+    \item \textbf{Importar manifiesto}: el Jefe de faena solicita el manifiesto XML de una nave
+    y viaje al Servicio Nacional de Aduanas; el sistema lo valida y registra sus contenedores
+    y líneas de carga antes del arribo.
+    \item \textbf{Programar faenas}: el Jefe de faena planifica el desconsolidado de cada
+    contenedor (fecha, franja horaria, cuadrilla y jefe tarjador), y la faena queda disponible
+    en la aplicación móvil.
+    \item \textbf{Ejecutar operación en terreno}: el Jefe tarjador verifica el sello, registra
+    cada lote separado por cliente, las incidencias (daño, faltante, sobrante, mal embalaje,
+    sello alterado) y cierra la faena con la fotografía del contenedor vacío. Si no hay
+    manifiesto, la carga se ingresa en modalidad \emph{tarja ciega}.
+    \item \textbf{Validar reporte}: al cerrar la faena se genera el borrador del reporte; el
+    Supervisor del reporte lo revisa y lo aprueba o rechaza la evidencia defectuosa, que se
+    recaptura en terreno.
+    \item \textbf{Distribuir y consultar reportes}: el reporte aprobado se envía al cliente; el
+    Jefe de faena consulta las operaciones y puede reenviar el reporte, y el Cliente del
+    depósito consulta el estado de sus operaciones y descarga sus reportes aprobados.
+\end{enumerate}
+
+Respecto del Informe 2 se mantienen los mismos actores, reglas de negocio y estados. Solo se
+incorporan tres precisiones que el enfoque de datos hace visibles: cada fotografía registra la
+\emph{etapa} del desconsolidado a la que pertenece (sello, apertura, lote, incidencia o cierre),
+lo que permite ordenar el reporte por etapa y cliente; cada envío del reporte se registra como
+un hecho independiente (\emph{envío de reporte}), lo que permite auditar los reenvíos; y,
+cuando no existe manifiesto, el Jefe de faena puede registrar manualmente el contenedor al
+programarlo, condición necesaria para operar en tarja ciega.

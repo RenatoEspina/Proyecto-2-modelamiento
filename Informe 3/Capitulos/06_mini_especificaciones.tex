@@ -1,0 +1,667 @@
+% =========================================================
+\clearpage
+\section{Mini especificaciones de los procesos elementales}
+\label{sec:minispec}
+
+Las mini especificaciones describen la lógica de cada proceso elemental, es decir, de cada
+proceso que no se descompone en un diagrama de nivel inferior \parencite{demarco1979}. Se
+redactan en \textbf{español estructurado}: oraciones imperativas que usan solo los flujos y
+datos definidos en el diccionario de datos (en cursiva los flujos), combinadas con las
+estructuras \kw{SI}~\dots~\kw{ENTONCES}~\dots~\kw{SINO}, \kw{PARA CADA} y
+\kw{MIENTRAS}. Los verbos \kw{LEER}, \kw{ESCRIBIR} y \kw{ACTUALIZAR} indican el acceso a un
+almacén, y \kw{ENVIAR} la emisión de un flujo. Cada especificación indica además los flujos
+de entrada y salida y los almacenes que usa, de modo que pueda contrastarse con su DFD.
+
+% ---------------------------------------------------------
+\subsection{Proceso 1: Administrar datos maestros}
+
+Los cinco procesos de mantención comparten la misma estructura: validan la solicitud,
+aplican la acción y devuelven el resultado. La eliminación es \emph{lógica} cuando el registro
+ya fue usado por otra entidad, para no perder la trazabilidad histórica.
+
+\begin{minispec}{1.1}{Mantener usuarios}
+\msdato{Entradas}{\fl{datos de usuario} (desde Administrador del depósito).}
+\msdato{Salidas}{\fl{resultado de mantención} (hacia Administrador del depósito).}
+\msdato{Almacenes}{D1 Usuarios (lectura y escritura); D2 Clientes y D3 Trabajadores (lectura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} acción = crear \kw{ENTONCES}
+    \begin{logica}
+        \item \kw{SI} falta nombre, email, password o id\_rol \kw{ENTONCES ENVIAR}
+        \fl{resultado de mantención} con los campos faltantes y terminar.
+        \item \kw{LEER} D1; \kw{SI} el email ya existe \kw{ENTONCES ENVIAR} ``correo ya
+        registrado'' y terminar.
+        \item \kw{SI} la password no cumple la política mínima \kw{ENTONCES ENVIAR} sus
+        requisitos y terminar.
+        \item \kw{SI} el rol es de jefe tarjador o de cliente \kw{ENTONCES LEER} D3 o D2 y
+        verificar que exista la ficha a la que se ligará la cuenta.
+        \item Calcular password\_hash; \kw{ESCRIBIR} el usuario en D1 con activo = verdadero.
+    \end{logica}
+    \item \kw{SI} acción = editar \kw{ENTONCES} validar los campos modificados con las mismas
+    reglas y \kw{ACTUALIZAR} D1.
+    \item \kw{SI} acción = eliminar o desactivar \kw{ENTONCES ACTUALIZAR} activo = falso en D1.
+    \item \kw{ENVIAR} \fl{resultado de mantención} con el usuario resultante.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{1.2}{Mantener roles y permisos}
+\msdato{Entradas}{\fl{datos de rol} (desde Administrador del depósito).}
+\msdato{Salidas}{\fl{resultado de mantención}.}
+\msdato{Almacenes}{D1 Usuarios (lectura y escritura de roles y permisos).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} acción = crear o editar \kw{ENTONCES}
+    \begin{logica}
+        \item \kw{SI} el nombre está vacío o ya existe otro rol con ese nombre \kw{ENTONCES
+        ENVIAR} el error y terminar.
+        \item \kw{ESCRIBIR} el rol en D1 y, \kw{PARA CADA} código de permiso seleccionado,
+        asociarlo al rol.
+    \end{logica}
+    \item \kw{SI} acción = eliminar \kw{ENTONCES}
+    \begin{logica}
+        \item \kw{LEER} D1; \kw{SI} existen usuarios activos con ese rol \kw{ENTONCES ENVIAR}
+        ``rol en uso'' y terminar \kw{SINO} eliminar el rol y sus asociaciones.
+    \end{logica}
+    \item \kw{SI} acción = activar o desactivar \kw{ENTONCES ACTUALIZAR} activo en D1.
+    \item \kw{ENVIAR} \fl{resultado de mantención}.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{1.3}{Mantener tipos de bulto}
+\msdato{Entradas}{\fl{datos de tipo de bulto}.}
+\msdato{Salidas}{\fl{resultado de mantención}.}
+\msdato{Almacenes}{D4 Tipos de bulto (lectura y escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} acción = crear o editar \kw{ENTONCES}
+    \begin{logica}
+        \item \kw{SI} falta nombre o código, o el código ya existe en D4 \kw{ENTONCES ENVIAR}
+        el error y terminar.
+        \item \kw{ESCRIBIR} el tipo de bulto en D4 con activo = verdadero.
+    \end{logica}
+    \item \kw{SI} acción = eliminar \kw{ENTONCES} \kw{SI} existen líneas de carga con ese tipo
+    \kw{ENTONCES ACTUALIZAR} activo = falso \kw{SINO} eliminarlo de D4.
+    \item \kw{SI} acción = activar o desactivar \kw{ENTONCES ACTUALIZAR} activo en D4.
+    \item \kw{ENVIAR} \fl{resultado de mantención}.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{1.4}{Mantener clientes}
+\msdato{Entradas}{\fl{datos de cliente}.}
+\msdato{Salidas}{\fl{resultado de mantención}.}
+\msdato{Almacenes}{D2 Clientes (lectura y escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} acción = crear o editar \kw{ENTONCES}
+    \begin{logica}
+        \item \kw{SI} el rut no tiene formato válido o su dígito verificador no coincide
+        \kw{ENTONCES ENVIAR} el error y terminar.
+        \item \kw{SI} se crea y el rut ya existe en D2 \kw{ENTONCES ENVIAR} ``cliente ya
+        registrado'' y terminar.
+        \item \kw{SI} email no tiene formato válido \kw{ENTONCES ENVIAR} el error y terminar.
+        \item \kw{ESCRIBIR} o \kw{ACTUALIZAR} el cliente en D2 (incluye completar la ficha de
+        un cliente creado con datos mínimos desde un manifiesto).
+    \end{logica}
+    \item \kw{SI} acción = eliminar o desactivar \kw{ENTONCES ACTUALIZAR} activo = falso en D2.
+    \item \kw{ENVIAR} \fl{resultado de mantención}.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{1.5}{Mantener trabajadores y cuadrillas}
+\msdato{Entradas}{\fl{datos de trabajador}.}
+\msdato{Salidas}{\fl{resultado de mantención}.}
+\msdato{Almacenes}{D3 Trabajadores (lectura y escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} el objeto es una cuadrilla \kw{ENTONCES} crear, renombrar o eliminar la
+    cuadrilla en D3; no se elimina si tiene trabajadores asignados.
+    \item \kw{SI} el objeto es un trabajador \kw{ENTONCES}
+    \begin{logica}
+        \item \kw{SI} el rut no es válido o ya existe (al crear) \kw{ENTONCES ENVIAR} el error
+        y terminar.
+        \item \kw{SI} se indica id\_cuadrilla \kw{ENTONCES LEER} D3 y verificar que la
+        cuadrilla exista y tenga menos de cinco integrantes.
+        \item \kw{ESCRIBIR} o \kw{ACTUALIZAR} el trabajador en D3; deshabilitar equivale a
+        \kw{ACTUALIZAR} habilitado = falso.
+    \end{logica}
+    \item \kw{ENVIAR} \fl{resultado de mantención}.
+\end{logica}
+\end{minispec}
+
+% ---------------------------------------------------------
+\subsection{Proceso 2: Importar manifiesto}
+
+\begin{minispec}{2.1}{Obtener manifiesto}
+\msdato{Entradas}{\fl{solicitud de importación} (desde Jefe de faena).}
+\msdato{Salidas}{\fl{solicitud de manifiesto} (hacia Servicio Nacional de Aduanas);
+\fl{viaje solicitado} (hacia 2.2); \fl{aviso de importación duplicada} (hacia Jefe de faena).}
+\msdato{Almacenes}{D5 Manifiestos (lectura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} falta nave, viaje o fecha \kw{ENTONCES} solicitar los datos y terminar.
+    \item \kw{LEER} D5 buscando un manifiesto con la misma nave y viaje.
+    \item \kw{SI} existe y el Jefe de faena no confirma reemplazarlo \kw{ENTONCES ENVIAR}
+    \fl{aviso de importación duplicada} y terminar.
+    \item \kw{ENVIAR} \fl{solicitud de manifiesto} con nave, viaje y fecha.
+    \item \kw{ENVIAR} \fl{viaje solicitado} a 2.2, indicando si se trata de un reemplazo.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{2.2}{Validar estructura y datos}
+\msdato{Entradas}{\fl{manifiesto XML} (desde Servicio Nacional de Aduanas); \fl{viaje
+solicitado} (desde 2.1).}
+\msdato{Salidas}{\fl{manifiesto válido} (hacia 2.3); \fl{errores de validación} (hacia 2.4).}
+\msdato{Almacenes}{D4 Tipos de bulto (lectura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} no se recibe \fl{manifiesto XML} o Aduanas informa que no existe \kw{ENTONCES
+    ENVIAR} \fl{errores de validación} con ``manifiesto no disponible'' y terminar.
+    \item Verificar que el XML cumpla el esquema; \kw{PARA CADA} incumplimiento, agregar un
+    error con su ubicación.
+    \item Verificar que la nave y el viaje del XML coincidan con \fl{viaje solicitado}.
+    \item \kw{PARA CADA} contenedor: verificar número (cuatro letras y siete dígitos), tamaño
+    y nro\_sello\_declarado.
+    \item \kw{PARA CADA} línea: verificar cantidad\_declarada $> 0$, rut del consignatario y
+    que el código de tipo de bulto exista en D4.
+    \item \kw{SI} la lista de errores está vacía \kw{ENTONCES ENVIAR} \fl{manifiesto válido}
+    \kw{SINO ENVIAR} \fl{errores de validación}.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{2.3.1}{Registrar cabecera}
+\msdato{Entradas}{\fl{manifiesto válido} (desde 2.2).}
+\msdato{Salidas}{\fl{contenedores declarados} (hacia 2.3.2).}
+\msdato{Almacenes}{D5 Manifiestos (escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} se trata de un reemplazo \kw{ENTONCES} eliminar de D5 el manifiesto anterior
+    con sus contenedores y líneas que aún no tengan programación.
+    \item \kw{ESCRIBIR} en D5 el manifiesto con numero, nave, viaje y fecha\_recepcion = fecha
+    y hora actuales.
+    \item \kw{ENVIAR} \fl{contenedores declarados} con el id\_manifiesto asignado.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{2.3.2}{Registrar contenedores}
+\msdato{Entradas}{\fl{contenedores declarados} (desde 2.3.1).}
+\msdato{Salidas}{\fl{líneas declaradas} (hacia 2.3.3).}
+\msdato{Almacenes}{D5 Manifiestos (escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{PARA CADA} contenedor declarado:
+    \begin{logica}
+        \item \kw{ESCRIBIR} en D5 el contenedor con numero, tamano, nro\_sello\_declarado,
+        fecha\_arribo e id\_manifiesto.
+        \item Agregar sus líneas declaradas, con el id\_contenedor asignado, a
+        \fl{líneas declaradas}.
+    \end{logica}
+    \item \kw{ENVIAR} \fl{líneas declaradas} junto con la cantidad de contenedores registrados.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{2.3.3}{Verificar consignatario}
+\msdato{Entradas}{\fl{líneas declaradas} (desde 2.3.2).}
+\msdato{Salidas}{\fl{líneas con consignatario} (hacia 2.3.4).}
+\msdato{Almacenes}{D2 Clientes (lectura y escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{PARA CADA} línea declarada:
+    \begin{logica}
+        \item \kw{LEER} D2 buscando el cliente por el rut del consignatario.
+        \item \kw{SI} no existe \kw{ENTONCES ESCRIBIR} en D2 un cliente con rut y
+        razon\_social del manifiesto, activo = verdadero, y registrar la advertencia ``ficha
+        de cliente incompleta''.
+        \item Asociar a la línea el id\_cliente encontrado o creado.
+    \end{logica}
+    \item \kw{ENVIAR} \fl{líneas con consignatario} con las advertencias acumuladas.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{2.3.4}{Registrar líneas de carga}
+\msdato{Entradas}{\fl{líneas con consignatario} (desde 2.3.3).}
+\msdato{Salidas}{\fl{resumen de registro} (hacia 2.5).}
+\msdato{Almacenes}{D4 Tipos de bulto (lectura); D5 Manifiestos (escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{PARA CADA} línea: \kw{LEER} en D4 el id\_tipo\_bulto que corresponde a su código
+    y \kw{ESCRIBIR} en D5 la línea con descripcion, cantidad\_declarada, cantidad\_recibida =
+    0, id\_contenedor, id\_cliente e id\_tipo\_bulto.
+    \item \kw{ENVIAR} \fl{resumen de registro} con la cantidad de contenedores, la cantidad de
+    líneas y las advertencias.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{2.4}{Generar reporte de errores}
+\msdato{Entradas}{\fl{errores de validación} (desde 2.2).}
+\msdato{Salidas}{\fl{reporte de errores} (hacia Jefe de faena); \fl{importación rechazada}
+(hacia 2.5).}
+\msdato{Almacenes}{Ninguno.}
+\textbf{Lógica:}
+\begin{logica}
+    \item Ordenar los errores por ubicación en el XML y agruparlos por tipo.
+    \item Componer el \fl{reporte de errores} con nave, viaje, fecha y la lista de errores.
+    \item \kw{SI} el error es ``manifiesto no disponible'' \kw{ENTONCES} agregar la sugerencia
+    de reintentar más tarde o de operar en tarja ciega.
+    \item \kw{ENVIAR} \fl{reporte de errores} y \kw{ENVIAR} \fl{importación rechazada}.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{2.5}{Notificar resultado de importación}
+\msdato{Entradas}{\fl{resumen de registro} (desde 2.3.4) o \fl{importación rechazada}
+(desde 2.4).}
+\msdato{Salidas}{\fl{notificación de importación} (hacia Servicio Nacional de Aduanas);
+\fl{resumen de importación} (hacia Jefe de faena).}
+\msdato{Almacenes}{Ninguno.}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} se recibe \fl{resumen de registro} \kw{ENTONCES} resultado = exitoso
+    \kw{SINO} resultado = rechazado.
+    \item \kw{ENVIAR} \fl{notificación de importación} con nave, viaje y resultado.
+    \item \kw{SI} resultado = exitoso \kw{ENTONCES ENVIAR} \fl{resumen de importación} con la
+    cantidad de contenedores, líneas y advertencias.
+\end{logica}
+\end{minispec}
+
+% ---------------------------------------------------------
+\subsection{Proceso 3: Programar faenas}
+
+\begin{minispec}{3.1}{Crear programación}
+\msdato{Entradas}{\fl{datos de nueva programación} (desde Jefe de faena).}
+\msdato{Salidas}{\fl{confirmación de programación} (hacia Jefe de faena).}
+\msdato{Almacenes}{D5 Manifiestos (lectura y escritura); D6 Programaciones (lectura y
+escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} la solicitud es listar pendientes \kw{ENTONCES LEER} D5 y D6 y \kw{ENVIAR}
+    \fl{confirmación de programación} con los contenedores sin programación, su fecha de
+    arribo y su carga declarada; terminar.
+    \item \kw{SI} el contenedor no proviene de un manifiesto (contingencia de tarja ciega)
+    \kw{ENTONCES ESCRIBIR} en D5 el contenedor con numero, tamano y nro\_sello\_declarado.
+    \item \kw{SI} hora\_inicio $\geq$ hora\_termino o la fecha es anterior a hoy \kw{ENTONCES
+    ENVIAR} el error y terminar.
+    \item \kw{LEER} D6; \kw{SI} el contenedor ya tiene programación \kw{ENTONCES ENVIAR}
+    ``contenedor ya programado'' y terminar.
+    \item \kw{ESCRIBIR} en D6 la programación con estado = PROGRAMADA, sin cuadrilla ni jefe
+    tarjador.
+    \item \kw{ENVIAR} \fl{confirmación de programación} con el id\_programacion.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{3.2.1}{Determinar recursos disponibles}
+\msdato{Entradas}{\fl{solicitud de recursos} (desde Jefe de faena).}
+\msdato{Salidas}{\fl{recursos disponibles} (hacia Jefe de faena).}
+\msdato{Almacenes}{D3 Trabajadores y D6 Programaciones (lectura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{LEER} en D6 la fecha y la franja de la programación indicada.
+    \item \kw{PARA CADA} cuadrilla de D3: \kw{SI} todos sus trabajadores están habilitados y
+    ninguno participa en otra programación de D6 que se cruce con la franja \kw{ENTONCES}
+    agregarla a las cuadrillas disponibles.
+    \item \kw{PARA CADA} trabajador habilitado de D3 que pueda ser jefe tarjador: \kw{SI} no
+    dirige otra programación cruzada con la franja \kw{ENTONCES} agregarlo a los jefes
+    tarjadores disponibles.
+    \item \kw{ENVIAR} \fl{recursos disponibles}; \kw{SI} ambas listas están vacías, indicar que
+    la programación queda pendiente de asignación.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{3.2.2}{Verificar disponibilidad}
+\msdato{Entradas}{\fl{selección de recursos} (desde Jefe de faena).}
+\msdato{Salidas}{\fl{asignación válida} (hacia 3.2.3); \fl{rechazo de asignación} (hacia
+Jefe de faena).}
+\msdato{Almacenes}{D3 Trabajadores y D6 Programaciones (lectura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{LEER} la franja de la programación en D6.
+    \item Verificar en D3 y D6 que la cuadrilla seleccionada siga disponible en la franja.
+    \item Verificar en D3 y D6 que el jefe tarjador esté habilitado y siga disponible.
+    \item \kw{SI} alguno no está disponible \kw{ENTONCES ENVIAR} \fl{rechazo de asignación}
+    indicando cuál y terminar.
+    \item \kw{ENVIAR} \fl{asignación válida}.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{3.2.3}{Registrar asignación}
+\msdato{Entradas}{\fl{asignación válida} (desde 3.2.2).}
+\msdato{Salidas}{\fl{asignación registrada} (hacia Jefe de faena).}
+\msdato{Almacenes}{D6 Programaciones (lectura y escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{ACTUALIZAR} en D6 la programación con id\_cuadrilla e id\_jefe\_tarjador.
+    \item La faena queda disponible para el jefe tarjador, que la recibirá en el proceso 3.4.
+    \item \kw{ENVIAR} \fl{asignación registrada}.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{3.3}{Modificar programación}
+\msdato{Entradas}{\fl{cambio de programación} (desde Jefe de faena).}
+\msdato{Salidas}{\fl{confirmación de programación}.}
+\msdato{Almacenes}{D6 Programaciones (lectura y escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{LEER} la programación en D6; \kw{SI} no existe \kw{ENTONCES ENVIAR} el error y
+    terminar.
+    \item \kw{SI} acción = reprogramar \kw{ENTONCES} \kw{SI} estado $\neq$ PROGRAMADA o la
+    nueva franja se cruza con otra programación \kw{ENTONCES} rechazar \kw{SINO ACTUALIZAR}
+    fecha, hora\_inicio y hora\_termino.
+    \item \kw{SI} acción = anular \kw{ENTONCES} \kw{SI} estado = PROGRAMADA \kw{ENTONCES
+    ACTUALIZAR} estado = ANULADA.
+    \item \kw{SI} acción = eliminar \kw{ENTONCES} \kw{SI} estado = PROGRAMADA (aún sin
+    operación) \kw{ENTONCES} eliminarla de D6 \kw{SINO} rechazar.
+    \item \kw{SI} acción = modificar estado \kw{ENTONCES ACTUALIZAR} estado al valor indicado.
+    \item \kw{ENVIAR} \fl{confirmación de programación} con el resultado.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{3.4}{Entregar faenas asignadas}
+\msdato{Entradas}{\fl{credenciales} (desde Jefe tarjador).}
+\msdato{Salidas}{\fl{faenas asignadas} (hacia Jefe tarjador).}
+\msdato{Almacenes}{D1 Usuarios, D5 Manifiestos y D6 Programaciones (lectura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{LEER} D1; \kw{SI} el email no existe, la password no coincide o activo = falso
+    \kw{ENTONCES ENVIAR} ``credenciales inválidas'' y terminar.
+    \item Obtener el id\_trabajador ligado al usuario.
+    \item \kw{LEER} D6: programaciones con id\_jefe\_tarjador = id\_trabajador y estado
+    PROGRAMADA o EN\_EJECUCION, ordenadas por fecha y hora\_inicio.
+    \item \kw{PARA CADA} programación: \kw{LEER} en D5 el contenedor y sus líneas declaradas.
+    \item \kw{ENVIAR} \fl{faenas asignadas}, aplicando el filtro de búsqueda si se indicó.
+\end{logica}
+\end{minispec}
+
+% ---------------------------------------------------------
+\subsection{Proceso 4: Ejecutar operación en terreno}
+
+Todos los procesos que reciben una imagen aplican la misma \textbf{regla de evidencia}: no
+aceptan el registro sin una imagen válida y escriben en D8 una fotografía con uuid,
+etapa, fecha\_hora\_captura, latitud, longitud, estado = PENDIENTE e id\_operacion.
+
+\begin{minispec}{4.1}{Iniciar operación}
+\msdato{Entradas}{\fl{datos de inicio} (desde Jefe tarjador).}
+\msdato{Salidas}{\fl{confirmación de registro} (hacia Jefe tarjador).}
+\msdato{Almacenes}{D5 Manifiestos (lectura); D6 Programaciones (lectura y escritura);
+D7 Operaciones (escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{LEER} la programación en D6; \kw{SI} no está asignada a este jefe tarjador o su
+    estado no es PROGRAMADA \kw{ENTONCES ENVIAR} el error y terminar.
+    \item \kw{LEER} en D5 las líneas declaradas del contenedor.
+    \item \kw{SI} existen líneas \kw{ENTONCES} modalidad\_ingreso = MANIFIESTO\_XML \kw{SINO}
+    modalidad\_ingreso = TARJA\_CIEGA.
+    \item \kw{ESCRIBIR} en D7 la operación con hora\_inicio = ahora, estado = EN\_EJECUCION.
+    \item \kw{ACTUALIZAR} en D6 estado = EN\_EJECUCION.
+    \item \kw{ENVIAR} \fl{confirmación de registro} con el contenedor, sus líneas y la
+    modalidad.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{4.2}{Verificar sello}
+\msdato{Entradas}{\fl{datos de sello} (desde Jefe tarjador).}
+\msdato{Salidas}{\fl{confirmación de registro}.}
+\msdato{Almacenes}{D5 Manifiestos (lectura); D7 Operaciones y D8 Fotografías (escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item Aplicar la regla de evidencia con etapa = SELLO.
+    \item \kw{LEER} en D5 el nro\_sello\_declarado del contenedor.
+    \item \kw{SI} el sello está roto \kw{ENTONCES} estado = ROTO \kw{SINO SI} numero\_digitado
+    $\neq$ nro\_sello\_declarado \kw{ENTONCES} estado = NO\_COINCIDE \kw{SINO} estado =
+    INTACTO.
+    \item \kw{ESCRIBIR} en D7 el sello con numero\_digitado, estado y fecha\_verificacion.
+    \item \kw{SI} estado $\neq$ INTACTO \kw{ENTONCES ENVIAR} \fl{confirmación de registro}
+    exigiendo registrar una incidencia SELLO\_ALTERADO antes de la apertura \kw{SINO ENVIAR}
+    \fl{confirmación de registro} habilitando la fotografía de apertura (etapa = APERTURA).
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{4.3.1}{Identificar línea de carga}
+\msdato{Entradas}{\fl{datos de lote} (desde Jefe tarjador).}
+\msdato{Salidas}{\fl{lote identificado} (hacia 4.3.2).}
+\msdato{Almacenes}{D2 Clientes y D4 Tipos de bulto (lectura); D5 Manifiestos (lectura y
+escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} la operación es MANIFIESTO\_XML \kw{ENTONCES LEER} en D5 la línea indicada;
+    \kw{SI} no pertenece al contenedor \kw{ENTONCES} rechazar el lote.
+    \item \kw{SINO} (tarja ciega):
+    \begin{logica}
+        \item \kw{LEER} D2 y D4 y verificar que el cliente y el tipo de bulto existan y estén
+        activos.
+        \item \kw{ESCRIBIR} en D5 una línea nueva con descripcion, id\_cliente,
+        id\_tipo\_bulto y cantidad\_declarada = cantidad recibida.
+    \end{logica}
+    \item \kw{ENVIAR} \fl{lote identificado} con id\_linea, cantidad recibida, imagen e
+    indicador de daño visible.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{4.3.2}{Contrastar cantidad}
+\msdato{Entradas}{\fl{lote identificado} (desde 4.3.1).}
+\msdato{Salidas}{\fl{diferencia de cantidad} (hacia 4.3.3).}
+\msdato{Almacenes}{D5 Manifiestos (lectura y escritura); D8 Fotografías (escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item Aplicar la regla de evidencia con etapa = LOTE e id\_linea.
+    \item \kw{ACTUALIZAR} en D5 cantidad\_recibida = cantidad\_recibida + cantidad del lote.
+    \item diferencia = cantidad\_recibida $-$ cantidad\_declarada (0 en tarja ciega).
+    \item \kw{ENVIAR} \fl{diferencia de cantidad} con diferencia e indicador de daño visible.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{4.3.3}{Evaluar diferencia}
+\msdato{Entradas}{\fl{diferencia de cantidad} (desde 4.3.2).}
+\msdato{Salidas}{\fl{confirmación de registro} (hacia Jefe tarjador).}
+\msdato{Almacenes}{Ninguno.}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} diferencia $> 0$ \kw{ENTONCES} tipo sugerido = SOBRANTE.
+    \item \kw{SI} se informó daño visible \kw{ENTONCES} tipo sugerido = DANO.
+    \item \kw{SI} existe tipo sugerido \kw{ENTONCES ENVIAR} \fl{confirmación de registro}
+    exigiendo registrar la incidencia sugerida antes del siguiente lote \kw{SINO ENVIAR}
+    \fl{confirmación de registro} con el lote confirmado.
+    \item Los faltantes se determinan al cerrar la faena (proceso 4.5), cuando ya no pueden
+    llegar más lotes de la línea.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{4.4}{Registrar incidencia}
+\msdato{Entradas}{\fl{datos de incidencia} (desde Jefe tarjador).}
+\msdato{Salidas}{\fl{confirmación de registro}.}
+\msdato{Almacenes}{D7 Operaciones y D8 Fotografías (escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} tipo $\neq$ SELLO\_ALTERADO y no se indica id\_linea \kw{ENTONCES} rechazar.
+    \item \kw{SI} no se adjunta al menos una imagen \kw{ENTONCES} rechazar (evidencia
+    obligatoria).
+    \item \kw{ESCRIBIR} en D7 la incidencia con tipo, descripcion, cantidad\_afectada,
+    fecha\_hora, id\_operacion e id\_linea.
+    \item \kw{PARA CADA} imagen: aplicar la regla de evidencia con etapa = INCIDENCIA e
+    id\_incidencia.
+    \item \kw{ENVIAR} \fl{confirmación de registro} habilitando la continuación del flujo.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{4.5}{Cerrar faena}
+\msdato{Entradas}{\fl{datos de cierre} (desde Jefe tarjador).}
+\msdato{Salidas}{\fl{confirmación de registro} (hacia Jefe tarjador); \fl{operación
+finalizada} (hacia proceso 5).}
+\msdato{Almacenes}{D5 Manifiestos (lectura); D6 Programaciones, D7 Operaciones y D8
+Fotografías (lectura y escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item Aplicar la regla de evidencia con etapa = CIERRE.
+    \item \kw{LEER} D8; \kw{SI} falta alguna de las etapas SELLO, APERTURA o CIERRE \kw{ENTONCES
+    ENVIAR} las etapas faltantes y terminar.
+    \item \kw{PARA CADA} línea del contenedor en D5 con cantidad\_recibida $<$
+    cantidad\_declarada:
+    \begin{logica}
+        \item Solicitar confirmación al Jefe tarjador; \kw{SI} confirma \kw{ENTONCES ESCRIBIR}
+        en D7 una incidencia FALTANTE por la diferencia \kw{SINO} terminar.
+    \end{logica}
+    \item \kw{ACTUALIZAR} en D7 la operación con hora\_fin = ahora y estado = FINALIZADA, y en
+    D6 la programación con estado = FINALIZADA.
+    \item \kw{ENVIAR} \fl{operación finalizada} con el id\_operacion y \kw{ENVIAR}
+    \fl{confirmación de registro} con el cierre de la faena.
+\end{logica}
+\end{minispec}
+
+% ---------------------------------------------------------
+\subsection{Proceso 5: Validar reporte}
+
+\begin{minispec}{5.1}{Generar borrador de reporte}
+\msdato{Entradas}{\fl{operación finalizada} (desde proceso 4); \fl{evidencia corregida}
+(desde 5.5).}
+\msdato{Salidas}{Ninguna hacia terminadores.}
+\msdato{Almacenes}{D5 Manifiestos, D7 Operaciones y D8 Fotografías (lectura); D9 Reportes
+(escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{LEER} en D7 la operación, su sello y sus incidencias; en D5 el contenedor y sus
+    líneas con su cliente; y en D8 las fotografías no rechazadas ni reemplazadas.
+    \item Ordenar las fotografías por etapa y, dentro de la etapa LOTE, por cliente.
+    \item Componer el documento PDF con los datos, las incidencias y las fotografías.
+    \item \kw{SI} la entrada es \fl{operación finalizada} \kw{ENTONCES ESCRIBIR} en D9 el
+    reporte con folio nuevo, version = 1, estado = BORRADOR, fecha\_generacion = ahora y
+    estado\_envio = PENDIENTE.
+    \item \kw{SINO} \kw{ACTUALIZAR} en D9 version = version + 1, estado = BORRADOR y el nuevo
+    documento.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{5.2}{Presentar reporte}
+\msdato{Entradas}{\fl{solicitud de revisión} (desde Supervisor del reporte).}
+\msdato{Salidas}{\fl{reporte para revisión} (hacia Supervisor del reporte).}
+\msdato{Almacenes}{D9 Reportes (lectura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} no se indica un reporte \kw{ENTONCES LEER} D9 y \kw{ENVIAR} la bandeja de
+    reportes en estado BORRADOR con folio, operación y fecha; terminar.
+    \item \kw{LEER} en D9 el reporte indicado; \kw{SI} su estado no es BORRADOR \kw{ENTONCES}
+    informarlo y terminar.
+    \item \kw{ENVIAR} \fl{reporte para revisión} con los datos de la faena y las fotografías
+    ordenadas por etapa y cliente.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{5.3}{Aprobar reporte}
+\msdato{Entradas}{\fl{decisión de validación} con aprobación (desde Supervisor).}
+\msdato{Salidas}{\fl{reporte aprobado} (hacia proceso 6); \fl{reporte para revisión} con
+aviso (hacia Supervisor).}
+\msdato{Almacenes}{D8 Fotografías (lectura); D9 Reportes (lectura y escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{LEER} D8; \kw{SI} falta evidencia obligatoria o hay fotografías RECHAZADAS sin
+    reemplazo \kw{ENTONCES ENVIAR} \fl{reporte para revisión} con el aviso de la etapa que
+    carece de fotografías y terminar.
+    \item \kw{ACTUALIZAR} en D9 estado = APROBADO, fecha\_aprobacion = ahora e
+    id\_aprobador = usuario supervisor.
+    \item \kw{ENVIAR} \fl{reporte aprobado} con el id\_reporte.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{5.4}{Rechazar evidencia}
+\msdato{Entradas}{\fl{decisión de validación} con rechazo (desde Supervisor).}
+\msdato{Salidas}{\fl{solicitud de recaptura} (hacia Jefe tarjador).}
+\msdato{Almacenes}{D8 Fotografías y D9 Reportes (lectura y escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} no se indica motivo\_rechazo \kw{ENTONCES} solicitarlo y terminar.
+    \item \kw{PARA CADA} fotografía marcada: \kw{ACTUALIZAR} en D8 estado = RECHAZADA y
+    motivo\_rechazo.
+    \item \kw{ACTUALIZAR} en D9 estado = EN\_CORRECCION.
+    \item \kw{ENVIAR} \fl{solicitud de recaptura} con la operación, la etapa, la fotografía y
+    el motivo.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{5.5}{Reemplazar evidencia}
+\msdato{Entradas}{\fl{fotografía de reemplazo} (desde Jefe tarjador).}
+\msdato{Salidas}{\fl{evidencia corregida} (hacia 5.1).}
+\msdato{Almacenes}{D8 Fotografías (lectura y escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{LEER} en D8 la fotografía rechazada; \kw{SI} su estado no es RECHAZADA
+    \kw{ENTONCES} descartar el reemplazo y terminar.
+    \item \kw{ESCRIBIR} en D8 la nueva fotografía con la misma etapa, operación, línea e
+    incidencia que la rechazada.
+    \item \kw{ACTUALIZAR} la fotografía rechazada con estado = REEMPLAZADA.
+    \item \kw{SI} no quedan fotografías RECHAZADAS en la operación \kw{ENTONCES ENVIAR}
+    \fl{evidencia corregida}.
+\end{logica}
+\end{minispec}
+
+% ---------------------------------------------------------
+\subsection{Proceso 6: Distribuir y consultar reportes}
+
+\begin{minispec}{6.1}{Enviar reporte}
+\msdato{Entradas}{\fl{reporte aprobado} (desde proceso 5); \fl{solicitud de reenvío}
+(desde Jefe de faena).}
+\msdato{Salidas}{\fl{reporte PDF} (hacia Cliente del depósito); \fl{resultado de envío}
+(hacia Supervisor o Jefe de faena).}
+\msdato{Almacenes}{D2 Clientes y D5 Manifiestos (lectura); D9 Reportes (lectura y
+escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{LEER} el reporte en D9; \kw{SI} su estado no es APROBADO \kw{ENTONCES ENVIAR}
+    \fl{resultado de envío} ``reporte pendiente de validación'' y terminar.
+    \item \kw{LEER} en D5 los clientes que tienen líneas en el contenedor de la operación y,
+    \kw{PARA CADA} uno, \kw{LEER} su email en D2.
+    \item \kw{SI} ningún cliente tiene email \kw{ENTONCES} resultado = FALLIDO con el motivo
+    ``completar ficha del cliente'' \kw{SINO ENVIAR} \fl{reporte PDF} a los destinatarios y
+    resultado = ENVIADO o FALLIDO según la respuesta del envío.
+    \item \kw{ESCRIBIR} en D9 un envío con fecha\_hora, destinatarios, origen (AUTOMATICO si
+    viene de 5.3, REENVIO si lo pidió el Jefe de faena) y resultado; \kw{ACTUALIZAR}
+    estado\_envio del reporte.
+    \item \kw{ENVIAR} \fl{resultado de envío} al Supervisor (origen automático) o al Jefe de
+    faena (reenvío).
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{6.2}{Consultar operaciones}
+\msdato{Entradas}{\fl{consulta de operaciones} (desde Jefe de faena).}
+\msdato{Salidas}{\fl{listado de operaciones} (hacia Jefe de faena).}
+\msdato{Almacenes}{D5 Manifiestos, D6 Programaciones y D9 Reportes (lectura); D7
+Operaciones (lectura y escritura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{SI} la consulta incluye un cambio de estado \kw{ENTONCES ACTUALIZAR} en D7 el
+    estado de la operación indicada (no se permite volver a EN\_EJECUCION una operación con
+    reporte aprobado).
+    \item \kw{LEER} D7, D6 y D5 y seleccionar las operaciones que cumplen los filtros (rango
+    de fechas, cliente, número de contenedor, estado).
+    \item \kw{PARA CADA} operación: \kw{LEER} en D9 el estado del reporte y su estado\_envio.
+    \item \kw{ENVIAR} \fl{listado de operaciones}; \kw{SI} está vacío, indicar ``sin
+    resultados''.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{6.3}{Consultar estado del cliente}
+\msdato{Entradas}{\fl{consulta de estado} (desde Cliente del depósito).}
+\msdato{Salidas}{\fl{estado de operaciones} (hacia Cliente del depósito).}
+\msdato{Almacenes}{D1 Usuarios, D5 Manifiestos, D6 Programaciones, D7 Operaciones y D9
+Reportes (lectura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{LEER} D1; \kw{SI} las credenciales son inválidas o la cuenta no está ligada a un
+    cliente \kw{ENTONCES} rechazar el acceso y terminar.
+    \item \kw{LEER} en D5 los contenedores con al menos una línea cuyo id\_cliente es el del
+    usuario.
+    \item \kw{PARA CADA} contenedor que cumple los filtros: \kw{LEER} su programación en D6,
+    su operación en D7 y el estado de su reporte en D9.
+    \item \kw{ENVIAR} \fl{estado de operaciones}, indicando cuáles tienen reporte APROBADO
+    disponible para descarga.
+\end{logica}
+\end{minispec}
+
+\begin{minispec}{6.4}{Entregar reporte PDF}
+\msdato{Entradas}{\fl{solicitud de PDF} (desde Cliente del depósito).}
+\msdato{Salidas}{\fl{reporte PDF} (hacia Cliente del depósito).}
+\msdato{Almacenes}{D9 Reportes (lectura).}
+\textbf{Lógica:}
+\begin{logica}
+    \item \kw{LEER} el reporte en D9; \kw{SI} no existe o no está APROBADO \kw{ENTONCES}
+    rechazar y terminar. El cliente solo puede solicitar reportes que el proceso 6.3 le
+    mostró como disponibles, es decir, de operaciones con carga consignada a su empresa.
+    \item \kw{SI} modo = visualizar \kw{ENTONCES ENVIAR} \fl{reporte PDF} para mostrarlo en
+    pantalla \kw{SINO ENVIAR} \fl{reporte PDF} como archivo descargable.
+\end{logica}
+\end{minispec}

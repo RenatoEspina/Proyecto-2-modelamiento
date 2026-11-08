@@ -1,0 +1,38 @@
+% Diagrama de estructura - Subsistema 2: Importar manifiesto (análisis de transformación)
+\begin{tikzpicture}[y = 1.4cm]
+    \node[modulo = 2.4cm] (S) at (0, 0) {\textbf{Importar manifiesto}};
+    \coordinate (SL) at ($(S.south)!0.7!(S.south west)$);
+    \coordinate (SR) at ($(S.south)!0.7!(S.south east)$);
+    \node[modulo] (OM) at (-6.6, -2.9) {Obtener manifiesto\\válido};
+    \node[modulo] (RM) at ( 0.0, -2.9) {Registrar\\manifiesto};
+    \node[modulo] (ER) at ( 6.6, -2.9) {Emitir resultado\\de importación};
+    \node[modulo] (LS) at (-11.0, -5.9) {Leer solicitud\\de importación};
+    \node[modulo] (VP) at (-8.5, -5.9) {Verificar\\importación previa};
+    \node[predefinido] (DX) at (-6.0, -5.9) {Descargar XML\\de Aduanas};
+    \node[modulo] (VE) at (-3.5, -5.9) {Validar\\estructura y datos};
+    \node[modulo] (RC) at (-3.7, -8.9) {Registrar\\cabecera};
+    \node[modulo] (RN) at (-1.2, -8.9) {Registrar\\contenedores};
+    \node[modulo] (VC) at ( 1.3, -8.9) {Verificar\\consignatario};
+    \node[modulo] (RL) at ( 3.8, -8.9) {Registrar líneas\\de carga};
+    \node[modulo] (GE) at ( 4.4, -5.9) {Generar reporte\\de errores};
+    \node[predefinido] (NA) at ( 6.9, -5.9) {Notificar\\a Aduanas};
+    \node[modulo] (MS) at ( 9.4, -5.9) {Mostrar resumen\\de importación};
+
+    \conecta{SL}{OM.north} \sube{SL}{OM.north}{manifiesto válido}
+    \conecta{S.south}{RM.north} \baja{S.south}{RM.north}{manifiesto\\válido}
+    \sube{S.south}{RM.north}{resumen}
+    \conecta{SR}{ER.north} \baja{SR}{ER.north}{resumen | errores}
+    \conecta{OM.south}{LS.north} \sube{OM.south}{LS.north}{nave, viaje}
+    \conecta{OM.south}{VP.north} \sube[control]{OM.south}{VP.north}{duplicado}
+    \conecta{OM.south}{DX.north} \sube{OM.south}{DX.north}{xml}
+    \conecta{OM.south}{VE.north} \baja{OM.south}{VE.north}{xml}
+    \sube[control]{OM.south}{VE.north}{válido}
+    \conecta{RM.south}{RC.north} \sube{RM.south}{RC.north}{id\_manifiesto}
+    \conecta{RM.south}{RN.north} \baja{RM.south}{RN.north}{contenedores}
+    \conecta{RM.south}{VC.north} \baja{RM.south}{VC.north}{rut}
+    \sube{RM.south}{VC.north}{id\_cliente}
+    \conecta{RM.south}{RL.north} \baja{RM.south}{RL.north}{líneas}
+    \conecta{ER.south}{GE.north} \baja{ER.south}{GE.north}{errores}
+    \conecta{ER.south}{NA.north} \baja{ER.south}{NA.north}{resultado}
+    \conecta{ER.south}{MS.north} \baja{ER.south}{MS.north}{resumen}
+\end{tikzpicture}

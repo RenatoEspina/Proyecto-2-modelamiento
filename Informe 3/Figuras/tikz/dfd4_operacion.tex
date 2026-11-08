@@ -1,0 +1,50 @@
+% DFD de nivel 1 — Proceso 4: Ejecutar operación en terreno
+\begin{tikzpicture}[font = \footnotesize,
+    etq/.append style = {font = \footnotesize},
+    proceso/.append style = {font = \footnotesize},
+    terminador/.append style = {font = \footnotesize\bfseries},
+    almacen/.append style = {font = \footnotesize}]
+    \node[terminador, minimum width = 3.6cm] (JT)  at ( 0.0,  9.8) {Jefe tarjador};
+    \node[terminador] (JTb) at (12.0, -3.2) {Jefe tarjador*};
+    \node[terminador] (JTc) at (-7.6, -7.4) {Jefe tarjador**};
+
+    \node[proceso = 2.4cm] (P41) at (-7.0,  3.6) {\proc{4.1}{Iniciar\\operación}};
+    \node[proceso = 2.4cm] (P42) at ( 0.0,  6.0) {\proc{4.2}{Verificar\\sello}};
+    \node[proceso = 2.4cm] (P43) at ( 7.0,  3.6) {\proc{4.3}{Registrar\\lote}};
+    \node[proceso = 2.4cm] (P44) at ( 7.0, -3.2) {\proc{4.4}{Registrar\\incidencia}};
+    \node[proceso = 2.4cm] (P45) at ( 0.0, -6.4) {\proc{4.5}{Cerrar\\faena}};
+
+    \node[almacen] (D5)  at (-3.2,  2.0) {D5 Manifiestos};
+    \node[almacen] (D6)  at (-4.4, -1.4) {D6 Programaciones};
+    \node[almacen] (D7)  at ( 0.0, -2.6) {D7 Operaciones};
+    \node[almacen] (D8)  at ( 3.8, -0.4) {D8 Fotografías};
+    \node[almacen] (D5b) at (11.6,  5.2) {D5* Manifiestos};
+    \node[almacen] (D2b) at (11.6,  3.6) {D2* Clientes};
+    \node[almacen] (D4b) at (11.6,  2.0) {D4* Tipos de bulto};
+    \node[almacen] (D5c) at (-4.8, -4.3) {D5** Manifiestos};
+
+    \parflujo{JT.-165}{P41.70}{datos de\\inicio}{confirmación\\de registro}{0.5}{0.5}
+    \parflujo{JT.-90}{P42.90}{datos de\\sello}{confirmación\\de registro}{0.5}{0.5}
+    \parflujo{JT.-15}{P43.110}{datos de\\lote}{confirmación\\de registro}{0.5}{0.5}
+    \parflujo{JTb.west}{P44.east}{datos de\\incidencia}{confirmación\\de registro}{0.5}{0.5}
+    \parflujo{JTc.east}{P45.200}{datos de\\cierre}{confirmación\\de registro}{0.5}{0.5}
+    \node[font = \footnotesize\itshape] (H5) at (8.0, -7.6) {hacia el proceso 5};
+    \draw[flujo] (P45.-15) -- node[etq, above, pos = 0.45] {operación finalizada} (H5.west);
+
+    \draw[flujo] (D5.west) -- (P41);
+    \draw[flujorw] (P41) -- (D6.north west);
+    \draw[flujo] (P41) -- (D7.north west);
+    \draw[flujo] (D5.north) -- (P42);
+    \draw[flujo] (P42) -- (D7.north);
+    \draw[flujo] (P42) -- (D8.north);
+    \draw[flujorw] (P43) -- (D5b.west);
+    \draw[flujo] (D2b.west) -- (P43);
+    \draw[flujo] (D4b.west) -- (P43);
+    \draw[flujo] (P43) -- (D8.north east);
+    \draw[flujo] (P44) -- (D7.east);
+    \draw[flujo] (P44) -- (D8.south east);
+    \draw[flujorw] (D7.south) -- (P45);
+    \draw[flujorw] (D8.south) -- (P45);
+    \draw[flujo] (D5c.east) -- (P45);
+    \draw[flujorw] (D6.south) -- (P45);
+\end{tikzpicture}

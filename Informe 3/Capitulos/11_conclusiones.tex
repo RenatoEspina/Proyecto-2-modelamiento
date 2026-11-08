@@ -1,0 +1,40 @@
+\chapter{Conclusiones}
+\label{cap:conclusiones}
+
+El objetivo de este informe fue modelar BeeTracer con el paradigma estructurado, dando
+continuidad a la reconstrucción por ingeniería inversa iniciada en el Informe 2. El análisis
+partió del entorno del sistema: la declaración de propósitos fijó su razón de ser, registrar de
+forma verificable el estado de la carga en cada etapa del desconsolidado, y el diagrama de
+contexto y la lista de acontecimientos delimitaron los seis terminadores y los veinticuatro
+estímulos a los que debe responder. Desde allí, los diagramas de flujo de datos descompusieron
+el sistema en seis procesos principales, veintiocho procesos de nivel~1 y diez de nivel~2, cuyos
+flujos y almacenes quedaron definidos sin ambigüedad en el diccionario de datos y cuya lógica
+quedó descrita en las mini especificaciones.
+
+Comparar ambos enfoques sobre el mismo sistema fue la principal lección del trabajo. El modelo
+orientado a objetos del Informe 2 organizaba el sistema en torno a \emph{quién} es responsable
+de cada dato y comportamiento; el modelo estructurado lo organiza en torno a \emph{qué} se hace
+con los datos y dónde quedan. Este cambio de perspectiva hizo visibles detalles que el
+diagrama de clases no mostraba con claridad: la necesidad de registrar la etapa de cada
+fotografía para ordenar el reporte, la conveniencia de registrar cada envío del reporte como
+un hecho propio y la obligación de registrar el contenedor cuando se opera en tarja ciega. A
+la vez, la trazabilidad entre ambos modelos se mantuvo: las entidades del DER coinciden con las
+clases de entidad, y los módulos predefinidos del diseño, con las clases de servicio.
+
+La distinción entre el modelo esencial y el diseño resultó especialmente útil en BeeTracer.
+Al suponer tecnología perfecta, el análisis se concentró en las reglas de negocio (evidencia
+obligatoria, contraste de cantidades, validación del supervisor) sin distraerse con la falta
+de señal en el patio. En el diseño, esos aspectos tecnológicos se incorporaron como módulos
+bien delimitados (compresión, sellado, encolado y sincronización de fotografías), y el
+análisis de transacción permitió obtener una arquitectura en la que cada subsistema
+corresponde a un proceso del nivel~0. El módulo \este{Registrar evidencia fotográfica},
+reutilizado por todas las etapas, muestra cómo un buen diseño concentra en un solo lugar la
+regla que da valor al producto.
+
+Como limitación, al igual que en el informe anterior, no se tuvo acceso al código ni a la
+base de datos de BeeTracer, por lo que los procesos, módulos y tablas propuestos son una
+reconstrucción coherente con lo observado y no necesariamente idéntica a la implementación
+real. Aun así, el modelo relacional y las especificaciones de módulos constituyen una base
+concreta para una eventual implementación o para evaluar mejoras del sistema, como la
+auditoría de los cambios de estado o la integración con los módulos complementarios que la
+empresa comercializa por separado.

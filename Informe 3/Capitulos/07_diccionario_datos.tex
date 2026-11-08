@@ -1,0 +1,364 @@
+% =========================================================
+\clearpage
+\section{Diccionario de datos}
+\label{sec:diccionario}
+
+El diccionario de datos define de forma rigurosa cada flujo, almacén y dato elemental que
+aparece en los DFD y en las mini especificaciones \parencite{yourdon1989}. Es la referencia
+que garantiza el balanceo entre niveles: un flujo compuesto del nivel superior se define
+aquí como la selección o concatenación de los flujos en que se descompone.
+
+\subsection{Notación}
+
+Se usa la notación de \textcite{demarco1979} resumida en la Tabla~\ref{tab:notacion}.
+
+{\estilotabla
+\begin{longtable}{|C{2.2cm}|L{5.0cm}|L{7.0cm}|}
+\caption{Notación del diccionario de datos.}
+\label{tab:notacion}\\
+\hline
+\rowcolor{filacabecera}
+\textbf{Símbolo} & \textbf{Significado} & \textbf{Ejemplo} \\ \hline
+\endfirsthead
+\texttt{=} & está compuesto de & \texttt{credenciales = email + password} \\ \hline
+\texttt{+} & y (concatenación) & \texttt{nave + viaje} \\ \hline
+\texttt{[ a | b ]} & selección de una alternativa & \texttt{[aprobación | rechazo]} \\ \hline
+\texttt{\{ a \}} & iteración (cero o más veces) & \texttt{\{imagen\}} \\ \hline
+\texttt{n\{ a \}m} & iteración entre n y m veces & \texttt{1\{imagen\}} (al menos una) \\ \hline
+\texttt{( a )} & dato opcional & \texttt{(id\_linea)} \\ \hline
+\texttt{@} & identificador (clave) de un almacén & \texttt{@id\_usuario} \\ \hline
+\texttt{* texto *} & comentario & \texttt{* solo en tarja ciega *} \\ \hline
+\end{longtable}
+}
+
+% ---------------------------------------------------------
+\subsection{Flujos de datos}
+
+La Tabla~\ref{tab:flujos} define los flujos de todos los niveles en orden alfabético. Los
+flujos del diagrama de contexto aparecen como selecciones de los flujos de nivel inferior.
+
+{\estilotabla
+\begin{longtable}{|L{3.4cm}|L{7.2cm}|L{4.0cm}|}
+\caption{Diccionario de datos - Flujos de datos.}
+\label{tab:flujos}\\
+\hline
+\rowcolor{filacabecera}
+\textbf{Flujo} & \textbf{Composición} & \textbf{Origen $\rightarrow$ destino} \\ \hline
+\endfirsthead
+\hline
+\rowcolor{filacabecera}
+\textbf{Flujo} & \textbf{Composición} & \textbf{Origen $\rightarrow$ destino} \\ \hline
+\endhead
+asignación registrada & id\_programacion + id\_cuadrilla + id\_jefe\_tarjador &
+3.2.3 $\rightarrow$ Jefe de faena \\ \hline
+asignación válida & id\_programacion + id\_cuadrilla + id\_jefe\_tarjador &
+3.2.2 $\rightarrow$ 3.2.3 \\ \hline
+aviso de importación duplicada & nave + viaje + fecha\_recepcion & 2.1 $\rightarrow$ Jefe de
+faena \\ \hline
+cambio de programación & id\_programacion + accion\_programacion + (fecha + hora\_inicio +
+hora\_termino) + (estado\_faena) & Jefe de faena $\rightarrow$ 3.3 \\ \hline
+confirmación de programación & [\{contenedor pendiente\} | id\_programacion + estado\_faena |
+recursos disponibles | rechazo de asignación | asignación registrada] + (mensaje) \newline
+* contenedor pendiente = id\_contenedor + numero + fecha\_arribo + \{descripcion +
+cantidad\_declarada\} * & 3.1, 3.2, 3.3 $\rightarrow$ Jefe de faena \\ \hline
+confirmación de registro & id\_operacion + resultado + (mensaje) + (tipo\_incidencia *
+incidencia exigida *) + (\{linea de faena\}) & 4.1 a 4.5, 4.3.3 $\rightarrow$ Jefe tarjador
+\\ \hline
+consulta de estado & credenciales + (fecha\_desde + fecha\_hasta) + (numero) & Cliente del
+depósito $\rightarrow$ 6.3 \\ \hline
+consulta de operaciones & filtros + (id\_operacion + estado\_faena * cambio de estado *) &
+Jefe de faena $\rightarrow$ 6.2 \\ \hline
+contenedores declarados & id\_manifiesto + 1\{numero + tamano + nro\_sello\_declarado +
+fecha\_arribo + \{linea declarada\}\} & 2.3.1 $\rightarrow$ 2.3.2 \\ \hline
+credenciales & email + password & Jefe tarjador $\rightarrow$ 3.4; parte de consulta de estado
+\\ \hline
+datos de asignación & [solicitud de recursos | selección de recursos] & Jefe de faena
+$\rightarrow$ 3.2 \\ \hline
+datos de cierre & id\_operacion + imagen + (confirma\_faltantes) & Jefe tarjador
+$\rightarrow$ 4.5 \\ \hline
+datos de cliente & accion + (id\_cliente) + rut + razon\_social + email + (activo) &
+Administrador $\rightarrow$ 1.4 \\ \hline
+datos de incidencia & id\_operacion + tipo\_incidencia + (id\_linea) + descripcion +
+cantidad\_afectada + 1\{imagen\} & Jefe tarjador $\rightarrow$ 4.4 \\ \hline
+datos de inicio & id\_programacion & Jefe tarjador $\rightarrow$ 4.1 \\ \hline
+datos de lote & id\_operacion + [id\_linea | descripcion + id\_cliente + id\_tipo\_bulto *
+tarja ciega *] + cantidad\_recibida + dano\_visible + imagen & Jefe tarjador $\rightarrow$
+4.3 / 4.3.1 \\ \hline
+datos de nueva programación & [listar\_pendientes | [id\_contenedor | numero + tamano +
+nro\_sello\_declarado * tarja ciega *] + fecha + hora\_inicio + hora\_termino] & Jefe de faena
+$\rightarrow$ 3.1 \\ \hline
+datos de programación & [datos de nueva programación | datos de asignación | cambio de
+programación] & Jefe de faena $\rightarrow$ 3 \\ \hline
+datos de rol & accion + (id\_rol) + nombre + \{codigo\} + (activo) & Administrador
+$\rightarrow$ 1.2 \\ \hline
+datos de sello & id\_operacion + numero\_digitado + sello\_roto + imagen & Jefe tarjador
+$\rightarrow$ 4.2 \\ \hline
+datos de tipo de bulto & accion + (id\_tipo\_bulto) + codigo + nombre + (activo) &
+Administrador $\rightarrow$ 1.3 \\ \hline
+datos de trabajador & accion + [(id\_trabajador) + rut + nombre + cargo + (id\_cuadrilla) +
+(habilitado) | (id\_cuadrilla) + nombre * cuadrilla *] & Administrador $\rightarrow$ 1.5
+\\ \hline
+datos de usuario & accion + (id\_usuario) + nombre + email + (password) + id\_rol +
+([id\_trabajador | id\_cliente]) + (activo) & Administrador $\rightarrow$ 1.1 \\ \hline
+decisión de validación & id\_reporte + [id\_aprobador * aprobación * | 1\{id\_foto\} +
+motivo\_rechazo * rechazo *] & Supervisor $\rightarrow$ 5.3 / 5.4 \\ \hline
+diferencia de cantidad & id\_linea + diferencia + dano\_visible & 4.3.2 $\rightarrow$ 4.3.3
+\\ \hline
+errores de validación & nave + viaje + 1\{error\_validacion\} & 2.2 $\rightarrow$ 2.4 \\
+\hline
+estado de operaciones & \{numero + fecha + estado\_faena + estado\_reporte + (id\_reporte)\}
+& 6.3 $\rightarrow$ Cliente del depósito \\ \hline
+evidencia corregida & id\_operacion & 5.5 $\rightarrow$ 5.1 \\ \hline
+faenas asignadas & \{id\_programacion + fecha + hora\_inicio + hora\_termino + numero +
+nro\_sello\_declarado + \{linea declarada\}\} & 3.4 $\rightarrow$ Jefe tarjador \\ \hline
+fotografía de reemplazo & id\_foto + imagen & Jefe tarjador $\rightarrow$ 5.5 \\ \hline
+importación rechazada & nave + viaje & 2.4 $\rightarrow$ 2.5 \\ \hline
+linea declarada & descripcion + cantidad\_declarada + codigo + rut + razon\_social & (dato
+compuesto de manifiesto XML) \\ \hline
+líneas con consignatario & \{linea declarada + id\_contenedor + id\_cliente\} +
+cantidad\_contenedores + \{advertencia\} & 2.3.3 $\rightarrow$ 2.3.4 \\ \hline
+líneas declaradas & \{linea declarada + id\_contenedor\} + cantidad\_contenedores & 2.3.2
+$\rightarrow$ 2.3.3 \\ \hline
+listado de operaciones & \{id\_operacion + numero + fecha + estado\_faena +
+(estado\_reporte) + (estado\_envio)\} & 6.2 $\rightarrow$ Jefe de faena \\ \hline
+lote identificado & id\_operacion + id\_linea + cantidad\_recibida + dano\_visible + imagen &
+4.3.1 $\rightarrow$ 4.3.2 \\ \hline
+manifiesto válido & manifiesto XML + (reemplazar) & 2.2 $\rightarrow$ 2.3 / 2.3.1 \\ \hline
+manifiesto XML & numero + nave + viaje + 1\{numero + tamano + nro\_sello\_declarado +
+fecha\_arribo + 1\{linea declarada\}\} & Aduanas $\rightarrow$ 2.2 \\ \hline
+notificación de importación & nave + viaje + resultado & 2.5 $\rightarrow$ Aduanas \\ \hline
+operación finalizada & id\_operacion & 4.5 $\rightarrow$ 5.1 \\ \hline
+rechazo de asignación & id\_programacion + mensaje & 3.2.2 $\rightarrow$ Jefe de faena \\
+\hline
+recursos disponibles & id\_programacion + \{id\_cuadrilla + nombre\} + \{id\_trabajador +
+nombre\} & 3.2.1 $\rightarrow$ Jefe de faena \\ \hline
+registro de terreno & [datos de inicio | datos de sello | datos de lote | datos de incidencia
+| datos de cierre] & Jefe tarjador $\rightarrow$ 4 \\ \hline
+reporte aprobado & id\_reporte & 5.3 $\rightarrow$ 6.1 \\ \hline
+reporte de errores & nave + viaje + fecha + 1\{error\_validacion\} + (mensaje * sugerencia
+*) & 2.4 $\rightarrow$ Jefe de faena \\ \hline
+reporte para revisión & [\{id\_reporte + folio + id\_operacion + fecha\_generacion\} *
+bandeja * | id\_reporte + folio + version + documento\_pdf] + (mensaje * evidencia faltante
+*) & 5.2, 5.3 $\rightarrow$ Supervisor \\ \hline
+reporte PDF & folio + documento\_pdf + (modo) & 6.1, 6.4 $\rightarrow$ Cliente del depósito
+\\ \hline
+resultado de envío & id\_reporte + resultado\_envio + destinatarios + (mensaje) & 6.1
+$\rightarrow$ Supervisor / Jefe de faena \\ \hline
+resultado de importación & [resumen de importación | reporte de errores | aviso de
+importación duplicada] & 2 $\rightarrow$ Jefe de faena \\ \hline
+resultado de mantención & resultado + (id\_registro) + (mensaje) & 1.1 a 1.5 $\rightarrow$
+Administrador \\ \hline
+resumen de importación & nave + viaje + cantidad\_contenedores + cantidad\_lineas +
+\{advertencia\} & 2.5 $\rightarrow$ Jefe de faena \\ \hline
+resumen de registro & cantidad\_contenedores + cantidad\_lineas + \{advertencia\} & 2.3.4
+$\rightarrow$ 2.5 \\ \hline
+selección de recursos & id\_programacion + id\_cuadrilla + id\_jefe\_tarjador & Jefe de faena
+$\rightarrow$ 3.2.2 \\ \hline
+solicitud de importación & nave + viaje + fecha + (reemplazar) & Jefe de faena
+$\rightarrow$ 2.1 \\ \hline
+solicitud de manifiesto & nave + viaje + fecha & 2.1 $\rightarrow$ Aduanas \\ \hline
+solicitud de mantención & [datos de usuario | datos de rol | datos de tipo de bulto | datos
+de cliente | datos de trabajador] & Administrador $\rightarrow$ 1 \\ \hline
+solicitud de PDF & id\_reporte + modo & Cliente del depósito $\rightarrow$
+6.4 \\ \hline
+solicitud de recaptura & id\_operacion + id\_foto + etapa + motivo\_rechazo & 5.4
+$\rightarrow$ Jefe tarjador \\ \hline
+solicitud de recursos & id\_programacion & Jefe de faena $\rightarrow$ 3.2.1 \\ \hline
+solicitud de reenvío & id\_reporte & Jefe de faena $\rightarrow$ 6.1 \\ \hline
+solicitud de revisión & (id\_reporte) & Supervisor $\rightarrow$ 5.2 \\ \hline
+viaje solicitado & nave + viaje + fecha + (reemplazar) & 2.1 $\rightarrow$ 2.2 \\ \hline
+\end{longtable}
+}
+
+% ---------------------------------------------------------
+\subsection{Almacenes de datos}
+
+Cada almacén se define como un conjunto de registros. Los registros coinciden con las
+entidades del DER y con las tablas del modelo relacional (Tabla~\ref{tab:almacenes}).
+
+{\estilotabla
+\begin{longtable}{|C{1.0cm}|L{2.4cm}|L{11.2cm}|}
+\caption{Diccionario de datos - Almacenes.}
+\label{tab:almacenes}\\
+\hline
+\rowcolor{filacabecera}
+\textbf{Id} & \textbf{Almacén} & \textbf{Composición} \\ \hline
+\endfirsthead
+\hline
+\rowcolor{filacabecera}
+\textbf{Id} & \textbf{Almacén} & \textbf{Composición} \\ \hline
+\endhead
+D1 & Usuarios & \{usuario\} + \{rol\} + \{permiso\} + \{rol\_permiso\} \newline
+usuario = @id\_usuario + nombre + email + password\_hash + activo + id\_rol +
+(id\_trabajador) + (id\_cliente) \newline
+rol = @id\_rol + nombre + activo \newline
+permiso = @id\_permiso + codigo + descripcion \newline
+rol\_permiso = @id\_rol + @id\_permiso \\ \hline
+D2 & Clientes & \{cliente\} \newline
+cliente = @id\_cliente + rut + razon\_social + email + activo \\ \hline
+D3 & Trabajadores & \{trabajador\} + \{cuadrilla\} \newline
+trabajador = @id\_trabajador + rut + nombre + cargo + habilitado + (id\_cuadrilla) \newline
+cuadrilla = @id\_cuadrilla + nombre \\ \hline
+D4 & Tipos de bulto & \{tipo\_bulto\} \newline
+tipo\_bulto = @id\_tipo\_bulto + codigo + nombre + activo \\ \hline
+D5 & Manifiestos & \{manifiesto\} + \{contenedor\} + \{linea\_carga\} \newline
+manifiesto = @id\_manifiesto + numero + nave + viaje + fecha\_recepcion \newline
+contenedor = @id\_contenedor + numero + tamano + nro\_sello\_declarado + fecha\_arribo +
+(id\_manifiesto) \newline
+linea\_carga = @id\_linea + descripcion + cantidad\_declarada + cantidad\_recibida +
+id\_contenedor + id\_cliente + id\_tipo\_bulto \\ \hline
+D6 & Programaciones & \{programacion\} \newline
+programacion = @id\_programacion + fecha + hora\_inicio + hora\_termino + estado\_faena +
+id\_contenedor + (id\_cuadrilla) + (id\_jefe\_tarjador) \\ \hline
+D7 & Operaciones & \{operacion\} + \{sello\_seguridad\} + \{incidencia\} \newline
+operacion = @id\_operacion + hora\_inicio + (hora\_fin) + estado\_faena +
+modalidad\_ingreso + id\_programacion \newline
+sello\_seguridad = @id\_sello + numero\_digitado + estado\_sello + fecha\_verificacion +
+id\_operacion \newline
+incidencia = @id\_incidencia + tipo\_incidencia + descripcion + cantidad\_afectada +
+fecha\_hora + id\_operacion + (id\_linea) \\ \hline
+D8 & Fotografías & \{fotografia\} \newline
+fotografia = @id\_foto + uuid + etapa + fecha\_hora\_captura + latitud + longitud + (url) +
+estado\_foto + (motivo\_rechazo) + id\_operacion + (id\_linea) + (id\_incidencia) \\ \hline
+D9 & Reportes & \{reporte\} + \{envio\_reporte\} \newline
+reporte = @id\_reporte + folio + version + estado\_reporte + fecha\_generacion +
+(fecha\_aprobacion) + estado\_envio + documento\_pdf + id\_operacion + (id\_aprobador)
+\newline
+envio\_reporte = @id\_envio + fecha\_hora + destinatarios + origen\_envio +
+resultado\_envio + id\_reporte \\ \hline
+\end{longtable}
+}
+
+% ---------------------------------------------------------
+\subsection{Datos elementales}
+
+La Tabla~\ref{tab:elementales} define los datos que no se descomponen. Los identificadores
+de todas las entidades (id\_usuario, id\_rol, id\_permiso, id\_cliente, id\_trabajador,
+id\_cuadrilla, id\_tipo\_bulto, id\_manifiesto, id\_contenedor, id\_linea, id\_programacion,
+id\_operacion, id\_sello, id\_incidencia, id\_foto, id\_reporte, id\_envio) son enteros
+positivos asignados por el sistema; id\_jefe\_tarjador e id\_aprobador son alias de
+id\_trabajador e id\_usuario, respectivamente.
+
+{\estilotabla
+\begin{longtable}{|L{3.3cm}|L{3.3cm}|L{8.0cm}|}
+\caption{Diccionario de datos - Datos elementales.}
+\label{tab:elementales}\\
+\hline
+\rowcolor{filacabecera}
+\textbf{Dato} & \textbf{Tipo / dominio} & \textbf{Descripción} \\ \hline
+\endfirsthead
+\hline
+\rowcolor{filacabecera}
+\textbf{Dato} & \textbf{Tipo / dominio} & \textbf{Descripción} \\ \hline
+\endhead
+accion & [crear | editar | eliminar | activar | desactivar] & Operación de mantención
+solicitada sobre un dato maestro. \\ \hline
+accion\_programacion & [reprogramar | anular | eliminar | modificar\_estado] & Cambio
+solicitado sobre una programación. \\ \hline
+activo, habilitado & Lógico & Indica si el registro puede usarse en nuevas operaciones. \\
+\hline
+advertencia & Texto, hasta 200 caracteres & Aviso no bloqueante de la importación (por
+ejemplo, ficha de cliente incompleta). \\ \hline
+cantidad\_afectada & Entero $\geq 1$ & Bultos afectados por una incidencia. \\ \hline
+cantidad\_contenedores, cantidad\_lineas & Entero $\geq 0$ & Totales registrados en una
+importación. \\ \hline
+cantidad\_declarada & Entero $\geq 1$ & Bultos declarados en el manifiesto para una línea.
+\\ \hline
+cantidad\_recibida & Entero $\geq 0$ & Bultos contados en terreno para una línea. \\ \hline
+cargo & Texto, hasta 60 caracteres & Cargo del trabajador dentro de la cuadrilla. \\ \hline
+codigo & Texto, hasta 20 caracteres & Código corto de un permiso o de un tipo de bulto. \\
+\hline
+confirma\_faltantes & Lógico & Confirmación del cierre con líneas sin lote registrado. \\
+\hline
+dano\_visible & Lógico & Indica que el lote presenta daño visible. \\ \hline
+descripcion & Texto, hasta 250 caracteres & Descripción de la mercancía, del permiso o del
+hallazgo. \\ \hline
+destinatarios & \{email\} & Direcciones a las que se envió el reporte. \\ \hline
+diferencia & Entero & cantidad\_recibida $-$ cantidad\_declarada. \\ \hline
+documento\_pdf & Archivo PDF & Reporte compilado con datos y fotografías. \\ \hline
+email & Ver dominios & Correo de un usuario o de un cliente. \\ \hline
+error\_validacion & Texto + ubicación en el XML & Incumplimiento detectado al validar el
+manifiesto. \\ \hline
+estado\_envio & Ver dominios & Resultado del último envío del reporte. \\ \hline
+estado\_faena & Ver dominios & Estado compartido por programación y operación. \\ \hline
+estado\_foto & Ver dominios & Estado de una fotografía. \\ \hline
+estado\_reporte & Ver dominios & Estado de un reporte. \\ \hline
+estado\_sello & Ver dominios & Resultado de la verificación del sello. \\ \hline
+etapa & Ver dominios & Etapa del desconsolidado a la que pertenece una fotografía. \\ \hline
+fecha, fecha\_arribo & Fecha (dd-mm-aaaa) & Fecha planificada o de arribo al terminal. \\
+\hline
+fecha\_desde, fecha\_hasta & Fecha & Rango de búsqueda de operaciones. \\ \hline
+fecha\_generacion, fecha\_aprobacion, fecha\_recepcion, fecha\_verificacion, fecha\_hora,
+fecha\_hora\_captura & Fecha y hora (dd-mm-aaaa hh:mm:ss) & Momento en que ocurrió el
+hecho registrado. \\ \hline
+filtros & (fecha\_desde + fecha\_hasta) + (id\_cliente) + (numero) + (estado\_faena) &
+Criterios de búsqueda de operaciones. \\ \hline
+folio & Texto, formato BT-aaaa-nnnnnn & Número correlativo del reporte. \\ \hline
+hora\_inicio, hora\_termino, hora\_fin & Hora (hh:mm) o fecha y hora & Límites de una franja
+o de una operación. \\ \hline
+imagen & Archivo JPEG & Imagen capturada por la cámara del dispositivo. \\ \hline
+latitud, longitud & Real, grados decimales & Geoposición de la captura de una fotografía.
+\\ \hline
+listar\_pendientes & Lógico & Indica que se solicita la lista de contenedores sin
+programación. \\ \hline
+mensaje & Texto, hasta 250 caracteres & Explicación de un resultado o de un error. \\
+\hline
+modalidad\_ingreso & Ver dominios & Origen de la carga de la operación. \\ \hline
+modo & [visualizar | descargar] & Forma de entrega del reporte al cliente. \\ \hline
+motivo\_rechazo & Texto, hasta 250 caracteres & Observación del Supervisor al rechazar una
+fotografía. \\ \hline
+nave, viaje & Texto, hasta 60 caracteres & Nombre de la nave e identificador de su viaje. \\
+\hline
+nombre & Texto, hasta 100 caracteres & Nombre de usuario, rol, trabajador, cuadrilla o tipo
+de bulto. \\ \hline
+nro\_sello\_declarado, numero\_digitado & Texto alfanumérico, hasta 20 caracteres & Número
+del sello declarado por el naviero y digitado en terreno. \\ \hline
+numero & Texto & Número del manifiesto o del contenedor (ver dominios). \\ \hline
+origen\_envio & Ver dominios & Indica si el envío fue automático o un reenvío. \\ \hline
+password & Texto, mínimo 8 caracteres con letras y números & Contraseña ingresada; nunca
+se almacena. \\ \hline
+password\_hash & Texto & Resumen criptográfico de la contraseña. \\ \hline
+razon\_social & Texto, hasta 150 caracteres & Razón social del cliente. \\ \hline
+reemplazar & Lógico & Confirma el reemplazo de un manifiesto ya importado. \\ \hline
+resultado & [exitoso | rechazado] & Resultado de una mantención, registro o importación. \\
+\hline
+resultado\_envio & [ENVIADO | FALLIDO] & Resultado de un envío del reporte. \\ \hline
+rut & Ver dominios & Rol único tributario de un cliente o trabajador. \\ \hline
+sello\_roto & Lógico & Indica que el sello se encontró físicamente roto. \\ \hline
+tamano & [20 | 40] & Tamaño del contenedor en pies. \\ \hline
+tipo\_incidencia & Ver dominios & Clasificación de una incidencia. \\ \hline
+url & Texto & Ubicación de la fotografía en el almacenamiento, una vez subida. \\ \hline
+uuid & Texto de 36 caracteres & Identificador universal generado en el dispositivo. \\
+\hline
+version & Entero $\geq 1$ & Versión del reporte; aumenta con cada corrección. \\ \hline
+\end{longtable}
+}
+
+% ---------------------------------------------------------
+\subsection{Dominios y valores posibles}
+
+\textbf{Formatos.}
+\begin{itemize}
+    \item \texttt{rut = 7\{dígito\}8 + "-" + [dígito | "K"]} (sin puntos; por ejemplo,
+    \texttt{76543210-K}).
+    \item \texttt{email = 1\{carácter\_permitido\} + "@" + 1\{carácter\_permitido\} + "." +
+    2\{letra\}}.
+    \item \texttt{numero (contenedor) = 4\{letra mayúscula\}4 + 7\{dígito\}7} (norma ISO
+    6346; por ejemplo, \texttt{MSCU1234567}).
+    \item \texttt{fecha = dd-mm-aaaa}; \texttt{hora = hh:mm}; \texttt{fecha\_hora = fecha +
+    hh:mm:ss}.
+\end{itemize}
+
+\textbf{Valores de las enumeraciones} (coinciden con los tipos enumerados del Informe 2).
+\begin{itemize}
+    \item \texttt{estado\_faena = [PROGRAMADA | EN\_EJECUCION | FINALIZADA | ANULADA]}
+    \item \texttt{modalidad\_ingreso = [MANIFIESTO\_XML | TARJA\_CIEGA]}
+    \item \texttt{estado\_sello = [INTACTO | ROTO | NO\_COINCIDE]}
+    \item \texttt{tipo\_incidencia = [DANO | FALTANTE | SOBRANTE | MAL\_EMBALAJE |
+    SELLO\_ALTERADO]}
+    \item \texttt{etapa = [SELLO | APERTURA | LOTE | INCIDENCIA | CIERRE]}
+    \item \texttt{estado\_foto = [PENDIENTE | SUBIDA | RECHAZADA | REEMPLAZADA]}
+    \item \texttt{estado\_reporte = [BORRADOR | EN\_CORRECCION | APROBADO]}
+    \item \texttt{estado\_envio = [PENDIENTE | ENVIADO | FALLIDO]}
+    \item \texttt{origen\_envio = [AUTOMATICO | REENVIO]}
+\end{itemize}

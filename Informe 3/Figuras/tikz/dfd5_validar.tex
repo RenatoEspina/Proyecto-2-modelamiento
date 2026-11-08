@@ -1,0 +1,47 @@
+% DFD de nivel 1 — Proceso 5: Validar reporte
+\begin{tikzpicture}[font = \footnotesize,
+    etq/.append style = {font = \footnotesize},
+    proceso/.append style = {font = \footnotesize},
+    terminador/.append style = {font = \footnotesize\bfseries},
+    almacen/.append style = {font = \footnotesize}]
+    \node[terminador, minimum height = 4.4cm] (SUP) at (12.2, 3.4) {Supervisor\\del reporte};
+    \node[terminador] (JT) at (0.4, -8.4) {Jefe tarjador};
+
+    \node[proceso = 2.4cm] (P51) at (-5.6,  1.4) {\proc{5.1}{Generar\\borrador de\\reporte}};
+    \node[proceso = 2.4cm] (P52) at ( 5.6,  5.8) {\proc{5.2}{Presentar\\reporte}};
+    \node[proceso = 2.4cm] (P53) at ( 6.4,  1.0) {\proc{5.3}{Aprobar\\reporte}};
+    \node[proceso = 2.4cm] (P54) at ( 5.6, -4.2) {\proc{5.4}{Rechazar\\evidencia}};
+    \node[proceso = 2.4cm] (P55) at (-4.6, -4.6) {\proc{5.5}{Reemplazar\\evidencia}};
+
+    \node[almacen] (D9)  at ( 0.8,  3.0) {D9 Reportes};
+    \node[almacen] (D8)  at ( 0.8, -1.0) {D8 Fotografías};
+    \node[almacen] (D7)  at (-8.8,  4.8) {D7 Operaciones};
+    \node[almacen] (D5)  at (-3.4,  4.8) {D5 Manifiestos};
+    \node[almacen] (D9b) at (10.4, -4.4) {D9* Reportes};
+
+    \node[font = \footnotesize\itshape, align = center] (H4) at (-10.6, 1.4) {desde el\\proceso 4};
+    \draw[flujo] (H4.east) -- node[etq, above, pos = 0.5] {operación\\finalizada} (P51.west);
+    \node[font = \footnotesize\itshape, align = center] (H6) at (6.4, -2.0) {hacia el proceso 6};
+    \draw[flujo] (P53.-90) -- node[etq, right = 1pt, pos = 0.45] {reporte aprobado} (H6.north);
+
+    \coordinate (s1) at ($(SUP.west) + (0, 1.6)$);
+    \coordinate (s2) at ($(SUP.west) + (0, -0.4)$);
+    \coordinate (s3) at ($(SUP.west) + (0, -1.8)$);
+    \parflujo{s1}{P52.10}{solicitud de\\revisión}{reporte para\\revisión}{0.5}{0.5}
+    \parflujo{s2}{P53.30}{decisión de\\validación}{reporte para\\revisión}{0.62}{0.5}
+    \draw[flujo] (s3) -- node[etq, below right = -1pt, pos = 0.35] {decisión de\\validación} (P54.60);
+    \draw[flujo] (P54.-120) -- node[etq, right = 1pt, pos = 0.5] {solicitud de\\recaptura} (JT.20);
+    \draw[flujo] (JT.160) -- node[etq, left = 1pt, pos = 0.5] {fotografía de\\reemplazo} (P55.-60);
+    \draw[flujo] (P55.100) -- node[etq, left = 1pt, pos = 0.5] {evidencia\\corregida} (P51.-100);
+
+    \draw[flujo] (D7.south) -- (P51);
+    \draw[flujo] (D5.south) -- (P51);
+    \draw[flujo] (D8.west) -- (P51);
+    \draw[flujo] (P51) -- (D9.west);
+    \draw[flujo] (D9.east) -- (P52);
+    \draw[flujorw] (D9.east) -- (P53);
+    \draw[flujo] (D8.east) -- (P53);
+    \draw[flujorw] (D8.south east) -- (P54);
+    \draw[flujorw] (P54) -- (D9b.west);
+    \draw[flujorw] (D8.south west) -- (P55);
+\end{tikzpicture}

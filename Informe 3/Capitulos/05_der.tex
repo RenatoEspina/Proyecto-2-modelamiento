@@ -1,0 +1,54 @@
+% =========================================================
+\clearpage
+\section{Diagrama entidad-relación}
+\label{sec:der}
+
+El diagrama entidad-relación (DER) describe la estructura lógica de los datos que el sistema
+almacena, con independencia de los procesos que los usan \parencite{chen1976}. Se construyó a
+partir del contenido de los almacenes D1 a D9 y es coherente con las clases de entidad del
+diagrama de clases del Informe 2: cada clase persistente se convierte en una entidad y las
+clases controladoras y de servicio (\clase{GestorManifiesto}, \clase{ServicioCorreo},
+\clase{SincronizadorOffline}, etc.) no aparecen, porque no representan datos sino
+comportamiento.
+
+Se usa la notación de Chen: las entidades son rectángulos, las relaciones son rombos
+rotulados con un verbo y cada línea indica la cardinalidad máxima de la entidad que la toca
+(1, N o M). Para no recargar el diagrama, los atributos se listan dentro de cada entidad, con
+el identificador subrayado (Figura~\ref{fig:der}). Las claves foráneas no se muestran, ya que
+son consecuencia de las relaciones y aparecen recién en el modelo relacional
+(Capítulo~\ref{cap:relacional}).
+
+Las relaciones más relevantes del modelo son las siguientes:
+
+\begin{itemize}
+    \item \textbf{Seguridad.} Un \textsc{rol} \este{otorga} muchos \textsc{permiso}s y un
+    permiso puede pertenecer a muchos roles (N:M). Cada \textsc{usuario} tiene un único rol y,
+    según su perfil, \este{corresponde} a la ficha de un \textsc{trabajador} (el jefe tarjador)
+    o \este{representa} a un \textsc{cliente}.
+    \item \textbf{Carga declarada.} Un \textsc{manifiesto} \este{declara} muchos
+    \textsc{contenedor}es y cada contenedor \este{contiene} muchas \textsc{linea\_carga}; cada
+    línea es \este{consignada} a un cliente y \este{clasificada} con un \textsc{tipo\_bulto}.
+    En tarja ciega, el contenedor existe sin manifiesto y sus líneas se crean en terreno.
+    \item \textbf{Planificación.} Cada contenedor \este{se planifica} en una sola
+    \textsc{programacion}, que \este{ejecuta} una \textsc{cuadrilla} y \este{dirige} un
+    trabajador en el rol de jefe tarjador. Una cuadrilla \este{integra} a muchos trabajadores.
+    \item \textbf{Operación en terreno.} Una programación \este{origina} una única
+    \textsc{operacion}, que \este{verifica} un \textsc{sello\_seguridad}, \este{registra}
+    incidencias y \este{documenta} fotografías. Cada \textsc{incidencia} \este{afecta} a una
+    línea de carga (salvo la de sello alterado) y es \este{respaldada} por fotografías;
+    cada \textsc{fotografia} de lote \este{evidencia} a una línea de carga.
+    \item \textbf{Reporte.} Una operación \este{genera} un \textsc{reporte}, que se versiona
+    con cada corrección, es \este{aprobado} por un usuario supervisor y \este{registra} cada
+    \textsc{envio\_reporte}, automático o reenviado.
+\end{itemize}
+
+Las participaciones opcionales del modelo son: la cuenta de usuario ligada a un trabajador o
+a un cliente; la cuadrilla y el jefe tarjador de una programación aún no asignada; el
+manifiesto de un contenedor ingresado en tarja ciega; la línea de carga de una incidencia de
+sello alterado y de las fotografías que no son de lote; la incidencia de las fotografías que
+no la respaldan; y el aprobador de un reporte en borrador.
+
+\diagramaapaisado{der}
+    {Diagrama entidad-relación}
+    {Diagrama entidad-relación del sistema BeeTracer (notación de Chen).}
+    {fig:der}

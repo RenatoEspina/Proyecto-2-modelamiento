@@ -1,0 +1,186 @@
+\chapter{Modelo de comportamiento}
+\label{cap:comportamiento}
+
+El modelo de comportamiento describe qué debe hacer el sistema internamente para responder a
+los acontecimientos del modelo ambiental \parencite{yourdon1989}. Se compone de los diagramas
+de flujo de datos, que muestran las funciones y los datos que intercambian; el diagrama
+entidad-relación, que muestra la estructura de los datos almacenados; las mini
+especificaciones, que describen la lógica de cada proceso elemental; y el diccionario de
+datos, que define con precisión cada flujo, almacén y dato elemental.
+
+% =========================================================
+\section{Diagramas de flujo de datos}
+\label{sec:dfd}
+
+Los diagramas de flujo de datos (DFD) se construyeron con la notación de
+\textcite{yourdon1989} y \textcite{demarco1979}:
+
+\begin{itemize}
+    \item Los \textbf{procesos} se dibujan como círculos, con un número jerárquico y un nombre
+    de la forma verbo más objeto. El proceso 4.3 del nivel~1 se descompone en los procesos
+    4.3.1, 4.3.2 y 4.3.3 del nivel~2, y así sucesivamente.
+    \item Los \textbf{terminadores} se dibujan como rectángulos y los \textbf{almacenes} como
+    dos líneas paralelas, identificados con la letra D y un número (D1 a D9).
+    \item Los \textbf{flujos} son flechas rotuladas con el nombre del dato que transportan.
+    Los flujos hacia o desde un almacén no se rotulan cuando transportan registros completos
+    del almacén; la flecha de doble punta indica que el proceso lee y actualiza el almacén.
+    \item Para evitar cruces, algunos terminadores y almacenes se dibujan más de una vez; las
+    copias se marcan con asterisco (por ejemplo, \este{Jefe de faena*} o \este{D2* Clientes}).
+    \item En los diagramas hijos, los flujos que vienen de otro proceso del diagrama padre o
+    van hacia él se indican con el texto \este{desde el proceso n} o \este{hacia el proceso n}.
+\end{itemize}
+
+Cada diagrama hijo está \textbf{balanceado} con su padre: los flujos que entran y salen de un
+proceso en el nivel superior son los mismos que entran y salen de su diagrama hijo, ya sea
+directamente o mediante sus componentes. Por ejemplo, el flujo \este{solicitud de mantención}
+del nivel~0 se descompone en el nivel~1 en \este{datos de usuario}, \este{datos de rol},
+\este{datos de tipo de bulto}, \este{datos de cliente} y \este{datos de trabajador}, tal como
+lo define el diccionario de datos (Sección~\ref{sec:diccionario}).
+
+% ---------------------------------------------------------
+\subsection{DFD de nivel 0}
+\label{sec:dfd0}
+
+El DFD de nivel~0 (Figura~\ref{fig:dfd0}) descompone el proceso único del diagrama de contexto
+en los seis procesos principales del sistema y muestra los nueve almacenes de datos que
+comparten. Se lee de izquierda a derecha siguiendo el ciclo de vida de una operación:
+
+\begin{enumerate}
+    \item \textbf{Administrar datos maestros} mantiene los almacenes de usuarios (D1), clientes
+    (D2), trabajadores y cuadrillas (D3) y tipos de bulto (D4), que los demás procesos solo
+    consultan.
+    \item \textbf{Importar manifiesto} obtiene el manifiesto XML del Servicio Nacional de
+    Aduanas y registra sus contenedores y líneas de carga en D5.
+    \item \textbf{Programar faenas} crea la programación de cada contenedor en D6, asigna la
+    cuadrilla y el jefe tarjador y entrega a este último sus faenas asignadas.
+    \item \textbf{Ejecutar operación en terreno} registra el avance de la faena en D7 y la
+    evidencia fotográfica en D8; al cerrar la faena emite el flujo interno \este{operación
+    finalizada}.
+    \item \textbf{Validar reporte} genera el borrador del reporte en D9, lo presenta al
+    Supervisor y lo aprueba o rechaza; al aprobarlo emite el flujo interno \este{reporte
+    aprobado}.
+    \item \textbf{Distribuir y consultar reportes} envía el reporte aprobado al cliente,
+    permite su reenvío y atiende las consultas del Jefe de faena y del Cliente del depósito.
+\end{enumerate}
+
+\diagramaapaisado{dfd_nivel0}
+    {DFD de nivel 0}
+    {Diagrama de flujo de datos de nivel 0 del sistema BeeTracer.}
+    {fig:dfd0}
+
+% ---------------------------------------------------------
+\subsection{DFD de nivel 1}
+\label{sec:dfd1}
+
+En el nivel~1 se descompone cada proceso del nivel~0 en los subprocesos que lo componen. A continuación se describe cada diagrama; los seis diagramas se presentan juntos al final de esta sección (Figuras~\ref{fig:dfd1} a~\ref{fig:dfd6}).
+
+\paragraph{Proceso 1: Administrar datos maestros.} La solicitud de mantención del
+Administrador se separa según el tipo de dato maestro (Figura~\ref{fig:dfd1}). Cada
+subproceso valida los datos, aplica la acción solicitada (crear, editar, eliminar o cambiar
+el estado) sobre su almacén y devuelve el resultado. El proceso 1.1 consulta además los
+almacenes de clientes y trabajadores, porque una cuenta de usuario puede quedar ligada a la
+ficha de un trabajador (jefe tarjador) o de un cliente.
+
+\paragraph{Proceso 2: Importar manifiesto.} El proceso 2.1 verifica que el viaje no haya sido
+importado antes y solicita el manifiesto a Aduanas; el 2.2 valida la estructura y los datos
+del XML recibido; si es válido, el 2.3 lo registra y, si no, el 2.4 genera el reporte de
+errores sin registrar información parcial. En ambos casos el 2.5 notifica el resultado a
+Aduanas y entrega el resumen al Jefe de faena (Figura~\ref{fig:dfd2}).
+
+\paragraph{Proceso 3: Programar faenas.} El Jefe de faena crea la programación de un
+contenedor pendiente (3.1), le asigna la cuadrilla y el jefe tarjador (3.2) y puede
+reprogramarla, anularla, eliminarla o cambiar su estado (3.3). Cuando el jefe tarjador inicia
+sesión en la aplicación móvil, el proceso 3.4 le entrega las faenas que tiene asignadas, con
+los datos del contenedor y su carga declarada (Figura~\ref{fig:dfd3}).
+
+\paragraph{Proceso 4: Ejecutar operación en terreno.} Cada etapa del flujo guiado del jefe
+tarjador corresponde a un subproceso (Figura~\ref{fig:dfd4}): iniciar la operación (4.1),
+verificar el sello (4.2), registrar cada lote separado por cliente (4.3), registrar las
+incidencias (4.4) y cerrar la faena (4.5). Los procesos que reciben una fotografía la
+registran en el almacén D8 junto con su etapa, fecha, hora y geoposición, lo que materializa
+la regla de evidencia obligatoria. Al cerrar la faena, el proceso 4.5 emite el flujo
+\este{operación finalizada} hacia el proceso 5.
+
+\paragraph{Proceso 5: Validar reporte.} El proceso 5.1 genera el borrador del reporte cuando
+recibe una operación finalizada o una evidencia corregida. El Supervisor solicita revisar un
+reporte (5.2) y lo aprueba (5.3) o rechaza la fotografía defectuosa (5.4), lo que genera una
+solicitud de recaptura al jefe tarjador. La fotografía de reemplazo se registra en el proceso
+5.5, que reactiva la generación de una nueva versión del reporte (Figura~\ref{fig:dfd5}).
+
+\paragraph{Proceso 6: Distribuir y consultar reportes.} El proceso 6.1 envía el reporte
+aprobado a los correos del cliente, ya sea automáticamente al aprobarse o a solicitud del Jefe
+de faena, y registra cada envío. El Jefe de faena consulta las operaciones y modifica su
+estado (6.2), y el Cliente del depósito consulta el estado de sus operaciones (6.3) y
+descarga el reporte aprobado (6.4), viendo solo las operaciones con carga consignada a su
+empresa (Figura~\ref{fig:dfd6}).
+
+\diagramaapaisado{dfd1_maestros}
+    {DFD de nivel 1 - Proceso 1}
+    {DFD de nivel 1 - Proceso 1: Administrar datos maestros.}
+    {fig:dfd1}
+
+\diagramaapaisado{dfd2_importar}
+    {DFD de nivel 1 - Proceso 2}
+    {DFD de nivel 1 - Proceso 2: Importar manifiesto.}
+    {fig:dfd2}
+
+\diagramaapaisado{dfd3_programar}
+    {DFD de nivel 1 - Proceso 3}
+    {DFD de nivel 1 - Proceso 3: Programar faenas.}
+    {fig:dfd3}
+
+\diagramaapaisado{dfd4_operacion}
+    {DFD de nivel 1 - Proceso 4}
+    {DFD de nivel 1 - Proceso 4: Ejecutar operación en terreno.}
+    {fig:dfd4}
+
+\diagramaapaisado{dfd5_validar}
+    {DFD de nivel 1 - Proceso 5}
+    {DFD de nivel 1 - Proceso 5: Validar reporte.}
+    {fig:dfd5}
+
+\diagramaapaisado{dfd6_distribuir}
+    {DFD de nivel 1 - Proceso 6}
+    {DFD de nivel 1 - Proceso 6: Distribuir y consultar reportes.}
+    {fig:dfd6}
+
+% ---------------------------------------------------------
+\subsection{DFD de nivel 2}
+\label{sec:dfd2}
+
+Se descomponen en un nivel más los tres procesos de nivel~1 cuya lógica involucra varios
+pasos con almacenes distintos. Los demás procesos de nivel~1 se consideran
+\emph{elementales}: su lógica cabe en una mini especificación de una página.
+
+\paragraph{Proceso 2.3: Registrar manifiesto.} El registro del manifiesto válido se realiza en
+cadena (Figura~\ref{fig:dfd23}): primero la cabecera (nave, viaje y número), luego cada
+contenedor declarado y, por cada línea de carga, se verifica que el consignatario exista en
+el almacén de clientes, creándolo con sus datos mínimos (RUT y razón social) si no existe,
+antes de registrar la línea con su tipo de bulto.
+
+\diagramatikz{dfd23_registrar_manifiesto}
+    {DFD de nivel 2 - Proceso 2.3}
+    {DFD de nivel 2 - Proceso 2.3: Registrar manifiesto.}
+    {fig:dfd23}
+
+\paragraph{Proceso 3.2: Asignar cuadrilla y jefe tarjador.} La asignación es un diálogo con el
+Jefe de faena (Figura~\ref{fig:dfd32}): el sistema determina qué cuadrillas y jefes tarjadores
+están habilitados y libres en la franja de la programación (3.2.1); el Jefe de faena elige y
+el sistema vuelve a verificar la disponibilidad, porque otra programación pudo ocuparlos
+entretanto (3.2.2); finalmente registra la asignación (3.2.3).
+
+\diagramatikz{dfd32_asignar}
+    {DFD de nivel 2 - Proceso 3.2}
+    {DFD de nivel 2 - Proceso 3.2: Asignar cuadrilla y jefe tarjador.}
+    {fig:dfd32}
+
+\paragraph{Proceso 4.3: Registrar lote.} Por cada lote separado (Figura~\ref{fig:dfd43}), el
+sistema identifica la línea de carga a la que pertenece o, en tarja ciega, la crea con los
+datos ingresados (4.3.1); contrasta la cantidad recibida con la declarada y registra la
+fotografía del lote (4.3.2); y evalúa la diferencia para confirmar el lote o exigir el
+registro de una incidencia de faltante, sobrante o daño (4.3.3).
+
+\diagramatikz{dfd43_lote}
+    {DFD de nivel 2 - Proceso 4.3}
+    {DFD de nivel 2 - Proceso 4.3: Registrar lote.}
+    {fig:dfd43}

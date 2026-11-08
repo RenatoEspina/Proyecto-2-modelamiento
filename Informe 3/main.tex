@@ -1,0 +1,126 @@
+\documentclass[12pt, letterpaper]{report}
+
+% =========================================================
+% FORMATO PUCV
+% =========================================================
+
+\usepackage{pucv_inf_2024}
+\usepackage{tikz}
+
+% Idioma: partición silábica en español.
+% Solo se activa si la distribución de LaTeX tiene instalado el idioma
+% (paquete 'texlive-langspanish' o equivalente). Sin él, el documento
+% compila igual, pero la separación silábica usa las reglas del inglés.
+\IfFileExists{spanish.ldf}{%
+    \usepackage[spanish, es-tabla, es-noshorthands]{babel}%
+}{}
+
+% =========================================================
+% PAQUETES ADICIONALES
+% =========================================================
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{adjustbox}
+\usepackage{ulem}
+\normalem
+\usepackage[most]{tcolorbox}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{Figuras/}}
+
+% =========================================================
+% ESTILOS PROPIOS DEL INFORME (incluye estilos TikZ)
+% =========================================================
+
+\input{estilo_informe}
+
+% =========================================================
+% DATOS DE PORTADA
+% =========================================================
+
+\newcommand{\tituloInforme}{%
+    Informe 3: Análisis y diseño estructurado del sistema BeeTracer}
+\newcommand{\subtituloInforme}{%
+    Trazabilidad y evidencia fotográfica del desconsolidado
+    en terminales extraportuarios}
+\newcommand{\asignaturaInforme}{ICI-3242 Modelamiento de Software}
+\newcommand{\profesorInforme}{Broderick Crawford}
+\newcommand{\paraleloInforme}{3}
+\newcommand{\fechaInforme}{Noviembre 2026}
+
+% =========================================================
+% REFERENCIAS
+% =========================================================
+
+\addbibresource{referencias.bib}
+
+% =========================================================
+% DOCUMENTO
+% =========================================================
+
+\begin{document}
+
+\include{Portadas/portada_principal}
+
+\pagenumbering{roman}
+
+\clearpage
+\addcontentsline{toc}{chapter}{Índice General}
+\tableofcontents
+
+\clearpage
+\addcontentsline{toc}{chapter}{Lista de Figuras}
+\listoffigures
+
+\clearpage
+\addcontentsline{toc}{chapter}{Lista de Tablas}
+\listoftables
+
+\clearpage
+\pagenumbering{arabic}
+
+% =========================================================
+% PARTE 1: ANÁLISIS ESTRUCTURADO
+% =========================================================
+
+\part{Análisis estructurado}
+
+\include{Capitulos/01_introduccion}
+\include{Capitulos/02_descripcion_general}
+\include{Capitulos/03_modelo_ambiental}
+\include{Capitulos/04_dfd}
+\input{Capitulos/05_der}
+\input{Capitulos/06_mini_especificaciones}
+\input{Capitulos/07_diccionario_datos}
+
+% =========================================================
+% PARTE 2: DISEÑO ESTRUCTURADO
+% =========================================================
+
+\part{Diseño estructurado}
+
+\include{Capitulos/08_diagrama_estructura}
+\include{Capitulos/09_modelo_relacional}
+\include{Capitulos/10_especificacion_modulos}
+\include{Capitulos/11_conclusiones}
+
+% =========================================================
+% REFERENCIAS BIBLIOGRÁFICAS
+% =========================================================
+
+\clearpage
+\chapter{Referencias bibliográficas}
+\label{cap:referencias}
+
+\nocite{*}
+\printbibliography[heading=none]
+
+\end{document}

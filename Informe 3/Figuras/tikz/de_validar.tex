@@ -1,0 +1,38 @@
+% Diagrama de estructura - Subsistema 5: Validar reporte (análisis de transacción)
+\begin{tikzpicture}[y = 1.4cm]
+    \node[modulo = 2.4cm] (S) at (0, 0) {\textbf{Validar reporte}};
+    \coordinate (SL) at ($(S.south)!0.7!(S.south west)$);
+    \coordinate (SR) at ($(S.south)!0.7!(S.south east)$);
+    \node[modulo] (LS) at (-10.4, -2.9) {Leer solicitud\\de validación};
+    \node[modulo] (GB) at (-6.6, -2.9) {Generar borrador\\de reporte};
+    \node[modulo] (PR) at (-2.6, -2.9) {Presentar\\reporte};
+    \node[modulo] (AR) at ( 1.4, -2.9) {Aprobar\\reporte};
+    \node[modulo] (RE) at ( 5.2, -2.9) {Rechazar\\evidencia};
+    \node[modulo] (RP) at ( 9.0, -2.9) {Reemplazar\\evidencia};
+    \node[modulo] (OD) at (-9.0, -5.9) {Obtener datos\\de la operación};
+    \node[modulo] (OE) at (-6.5, -5.9) {Ordenar evidencia\\por etapa y cliente};
+    \node[predefinido] (GP) at (-4.0, -5.9) {Generar PDF};
+    \node[modulo] (VO) at ( 0.2, -5.9) {Verificar evidencia\\obligatoria};
+    \node[modulo] (RA) at ( 2.7, -5.9) {Registrar\\aprobación};
+    \node[modulo] (MF) at ( 5.2, -5.9) {Marcar fotografía\\rechazada};
+    \node[predefinido] (NT) at ( 7.7, -5.9) {Notificar\\a terreno};
+    \node[modulo] (RF) at (10.2, -5.9) {Registrar fotografía\\de reemplazo};
+
+    \conecta{SL}{LS.north} \sube{SL}{LS.north}{solicitud}
+    \node[seleccion] (SEL) at (S.south) {};
+    \foreach \m in {GB, PR, AR, RE, RP} { \draw[llamada] (SEL.south) -- (\m.north); }
+    \baja{SEL.south}{GB.north}{id\_operacion}
+    \baja{SEL.south}{PR.north}{id\_reporte}
+    \sube{SEL.south}{PR.north}{reporte}
+    \sube[control]{SEL.south}{AR.north}{aprobado}
+    \sube[control]{SEL.south}{RP.north}{corregida}
+    \conecta{GB.south}{OD.north} \sube{GB.south}{OD.north}{datos}
+    \conecta{GB.south}{OE.north} \baja{GB.south}{OE.north}{fotografías}
+    \conecta{GB.south}{GP.north} \baja{GB.south}{GP.north}{contenido}
+    \sube{GB.south}{GP.north}{pdf}
+    \conecta{AR.south}{VO.north} \sube[control]{AR.south}{VO.north}{completa}
+    \conecta{AR.south}{RA.north} \baja{AR.south}{RA.north}{id\_aprobador}
+    \conecta{RE.south}{MF.north} \baja{RE.south}{MF.north}{id\_foto, motivo}
+    \conecta{RE.south}{NT.north} \baja{RE.south}{NT.north}{solicitud de\\recaptura}
+    \conecta{RP.south}{RF.north} \baja{RP.south}{RF.north}{imagen}
+\end{tikzpicture}

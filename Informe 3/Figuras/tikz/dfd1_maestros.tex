@@ -1,0 +1,34 @@
+% DFD de nivel 1 — Proceso 1: Administrar datos maestros
+\begin{tikzpicture}[font = \footnotesize,
+    etq/.append style = {font = \footnotesize},
+    proceso/.append style = {font = \footnotesize},
+    terminador/.append style = {font = \footnotesize\bfseries},
+    almacen/.append style = {font = \footnotesize}]
+    \node[terminador, minimum height = 3.4cm] (ADM) at (-6.5, 0) {Administrador\\del depósito};
+    \node[proceso = 2.3cm] (P11) at (0,  6) {\proc{1.1}{Mantener\\usuarios}};
+    \node[proceso = 2.3cm] (P12) at (0,  3) {\proc{1.2}{Mantener\\roles y\\permisos}};
+    \node[proceso = 2.3cm] (P13) at (0,  0) {\proc{1.3}{Mantener\\tipos de\\bulto}};
+    \node[proceso = 2.3cm] (P14) at (0, -3) {\proc{1.4}{Mantener\\clientes}};
+    \node[proceso = 2.3cm] (P15) at (0, -6) {\proc{1.5}{Mantener\\trabajadores\\y cuadrillas}};
+
+    \node[almacen] (D2b) at (5.2,  7.6) {D2* Clientes};
+    \node[almacen] (D3b) at (5.2,  6.0) {D3* Trabajadores};
+    \node[almacen] (D1)  at (5.2,  4.5) {D1 Usuarios};
+    \node[almacen] (D4)  at (5.2,  0.0) {D4 Tipos de bulto};
+    \node[almacen] (D2)  at (5.2, -3.0) {D2 Clientes};
+    \node[almacen] (D3)  at (5.2, -6.0) {D3 Trabajadores};
+
+    \foreach \k/\p/\d in {1/P11/usuario, 2/P12/rol, 3/P13/tipo de bulto,
+                          4/P14/cliente, 5/P15/trabajador} {
+        \coordinate (a\k) at ($(ADM.east) + (0, {1.32 - 0.66*(\k - 1)})$);
+        \parflujo{a\k}{\p.180}{datos de\\\d}{resultado de\\mantención}{0.5}{0.5}
+    }
+
+    \draw[flujo] (D2b.west) -- (P11);
+    \draw[flujo] (D3b.west) -- (P11);
+    \draw[flujorw] (P11) -- (D1.west);
+    \draw[flujorw] (P12) -- (D1.west);
+    \draw[flujorw] (P13) -- (D4.west);
+    \draw[flujorw] (P14) -- (D2.west);
+    \draw[flujorw] (P15) -- (D3.west);
+\end{tikzpicture}

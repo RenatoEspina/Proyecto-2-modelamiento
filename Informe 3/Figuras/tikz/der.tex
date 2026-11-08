@@ -1,0 +1,74 @@
+% Diagrama entidad-relación (notación de Chen; atributos dentro de la entidad,
+% clave primaria subrayada)
+\begin{tikzpicture}[font = \scriptsize]
+    % ----- Fila 1 -----
+    \node[entidad] (PER) at (0.0, 0.0) {\textbf{PERMISO}\nodepart{two}
+        \uline{id\_permiso}\\codigo\\descripcion};
+    \node[entidad] (ROL) at (5.0, 0.0) {\textbf{ROL}\nodepart{two}
+        \uline{id\_rol}\\nombre\\activo};
+    \node[entidad] (USU) at (10.0, 0.0) {\textbf{USUARIO}\nodepart{two}
+        \uline{id\_usuario}\\nombre\\email\\password\_hash\\activo};
+    \node[entidad] (REP) at (15.2, 0.0) {\textbf{REPORTE}\nodepart{two}
+        \uline{id\_reporte}\\folio\\version\\estado\\fecha\_generacion\\fecha\_aprobacion\\estado\_envio\\documento\_pdf};
+    \node[entidad] (ENV) at (20.4, 0.0) {\textbf{ENVIO\_REPORTE}\nodepart{two}
+        \uline{id\_envio}\\fecha\_hora\\destinatarios\\origen\\resultado};
+    % ----- Fila 2 -----
+    \node[entidad] (CLI) at (0.0, -5.6) {\textbf{CLIENTE}\nodepart{two}
+        \uline{id\_cliente}\\rut\\razon\_social\\email\\activo};
+    \node[entidad] (TRA) at (5.0, -5.6) {\textbf{TRABAJADOR}\nodepart{two}
+        \uline{id\_trabajador}\\rut\\nombre\\cargo\\habilitado};
+    \node[entidad] (PRO) at (10.0, -5.6) {\textbf{PROGRAMACION}\nodepart{two}
+        \uline{id\_programacion}\\fecha\\hora\_inicio\\hora\_termino\\estado};
+    \node[entidad] (OPE) at (15.2, -5.6) {\textbf{OPERACION}\nodepart{two}
+        \uline{id\_operacion}\\hora\_inicio\\hora\_fin\\estado\\modalidad\_ingreso};
+    \node[entidad] (SEL) at (20.4, -5.6) {\textbf{SELLO\_SEGURIDAD}\nodepart{two}
+        \uline{id\_sello}\\numero\_digitado\\estado\\fecha\_verificacion};
+    \node[entidad] (MAN) at (13.0, -8.1) {\textbf{MANIFIESTO}\nodepart{two}
+        \uline{id\_manifiesto}\\numero\\nave\\viaje\\fecha\_recepcion};
+    % ----- Fila 3 -----
+    \node[entidad] (TIP) at (0.0, -10.9) {\textbf{TIPO\_BULTO}\nodepart{two}
+        \uline{id\_tipo\_bulto}\\codigo\\nombre\\activo};
+    \node[entidad] (CUA) at (5.0, -10.4) {\textbf{CUADRILLA}\nodepart{two}
+        \uline{id\_cuadrilla}\\nombre};
+    \node[entidad] (CON) at (10.0, -12.3) {\textbf{CONTENEDOR}\nodepart{two}
+        \uline{id\_contenedor}\\numero\\tamano\\nro\_sello\_declarado\\fecha\_arribo};
+    \node[entidad] (INC) at (15.2, -11.6) {\textbf{INCIDENCIA}\nodepart{two}
+        \uline{id\_incidencia}\\tipo\\descripcion\\cantidad\_afectada\\fecha\_hora};
+    \node[entidad] (FOT) at (20.4, -11.6) {\textbf{FOTOGRAFIA}\nodepart{two}
+        \uline{id\_foto}\\uuid\\etapa\\fecha\_hora\_captura\\latitud\\longitud\\url\\estado\\motivo\_rechazo};
+    % ----- Fila 4 -----
+    \node[entidad] (LIN) at (6.6, -15.8) {\textbf{LINEA\_CARGA}\nodepart{two}
+        \uline{id\_linea}\\descripcion\\cantidad\_declarada\\cantidad\_recibida};
+
+    % ----- Relaciones -----
+    \relER{ROL}{PER}{r1}{otorga}{N}{M}{0.5}
+    \relER{ROL}{USU}{r2}{asigna}{1}{N}{0.5}
+    \relER{CLI}{USU}{r3}{representa}{1}{N}{0.42}
+    \relER{TRA}{USU}{r4}{corresponde}{1}{1}{0.5}
+    \relER{USU}{REP}{r5}{aprueba}{1}{N}{0.5}
+    \relER{REP}{ENV}{r6}{registra}{1}{N}{0.5}
+    \relER{OPE}{REP}{r7}{genera}{1}{1}{0.5}
+    \relER{OPE}{SEL}{r8}{verifica}{1}{1}{0.5}
+    \relER{OPE}{INC}{r9}{registra}{1}{N}{0.5}
+    \relER{OPE}{FOT}{r10}{documenta}{1}{N}{0.5}
+    \relER{INC}{FOT}{r11}{respalda}{1}{N}{0.5}
+    \relER{PRO}{OPE}{r12}{origina}{1}{1}{0.5}
+    \relER{TRA}{PRO}{r13}{dirige}{1}{N}{0.5}
+    \relER{CUA}{TRA}{r14}{integra}{1}{N}{0.5}
+    \relER{CUA}{PRO}{r15}{ejecuta}{1}{N}{0.5}
+    \relER{CON}{PRO}{r16}{se planifica}{1}{1}{0.5}
+    \relER{MAN}{CON}{r17}{declara}{1}{N}{0.45}
+    \relER{CON}{LIN}{r18}{contiene}{1}{N}{0.5}
+    \relER{TIP}{LIN}{r19}{clasifica}{1}{N}{0.5}
+
+    % Relaciones con trazado ortogonal
+    \node[relacion] (r20) at (-2.4, -8.4) {consigna};
+    \draw[line width = 0.5pt] (CLI.west) -| node[card, pos = 0.3] {1} (r20.north);
+    \draw[line width = 0.5pt] (r20.south) |- node[card, pos = 0.8] {N} (LIN.west);
+    \node[relacion] (r21) at (12.0, -15.8) {afecta};
+    \draw[line width = 0.5pt] (LIN.east) -- node[card, pos = 0.5] {1} (r21.west);
+    \draw[line width = 0.5pt] (r21.east) -| node[card, pos = 0.8] {N} (INC.south);
+    \node[relacion] (r22) at (16.0, -17.6) {evidencia};
+    \draw[line width = 0.5pt] (LIN.south) |- node[card, pos = 0.75] {1} (r22.west);
+    \draw[line width = 0.5pt] (r22.east) -| node[card, pos = 0.8] {N} (FOT.south);
+\end{tikzpicture}

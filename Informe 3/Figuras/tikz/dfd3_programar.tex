@@ -1,0 +1,36 @@
+% DFD de nivel 1 — Proceso 3: Programar faenas
+\begin{tikzpicture}[font = \footnotesize,
+    etq/.append style = {font = \footnotesize},
+    proceso/.append style = {font = \footnotesize},
+    terminador/.append style = {font = \footnotesize\bfseries},
+    almacen/.append style = {font = \footnotesize}]
+    \node[terminador, minimum height = 3.6cm] (JF) at (-7.6, 0) {Jefe de faena};
+    \node[terminador] (JT) at (13.4, 2.6) {Jefe tarjador};
+
+    \node[proceso = 2.4cm] (P31) at (-1.4,  4.2) {\proc{3.1}{Crear\\programación}};
+    \node[proceso = 2.4cm] (P32) at (-1.4,  0.0) {\proc{3.2}{Asignar\\cuadrilla y\\jefe tarjador}};
+    \node[proceso = 2.4cm] (P33) at (-1.4, -4.2) {\proc{3.3}{Modificar\\programación}};
+    \node[proceso = 2.4cm] (P34) at ( 8.6,  2.6) {\proc{3.4}{Entregar\\faenas\\asignadas}};
+
+    \node[almacen] (D5) at ( 3.6,  5.2) {D5 Manifiestos};
+    \node[almacen] (D6) at ( 3.6,  1.0) {D6 Programaciones};
+    \node[almacen] (D3) at (-1.4, -2.1) {D3 Trabajadores};
+    \node[almacen] (D1) at ( 8.6,  6.4) {D1 Usuarios};
+
+    \coordinate (j1) at ($(JF.east) + (0, 1.2)$);
+    \coordinate (j2) at ($(JF.east) + (0, 0)$);
+    \coordinate (j3) at ($(JF.east) + (0, -1.2)$);
+    \parflujo{j1}{P31.190}{datos de nueva\\programación}{confirmación de\\programación}{0.38}{0.5}
+    \parflujo{j2}{P32.180}{datos de\\asignación}{confirmación de\\programación}{0.38}{0.5}
+    \parflujo{j3}{P33.170}{cambio de\\programación}{confirmación de\\programación}{0.38}{0.5}
+    \parflujo{JT.west}{P34.east}{credenciales}{faenas\\asignadas}{0.5}{0.5}
+
+    \draw[flujorw] (P31) -- (D5.west);
+    \draw[flujorw] (P31) -- (D6.west);
+    \draw[flujorw] (P32) -- (D6.west);
+    \draw[flujorw] (P33) -- (D6.south west);
+    \draw[flujo] (D3.north) -- (P32);
+    \draw[flujo] (D6.east) -- (P34);
+    \draw[flujo] (D5.east) -- (P34);
+    \draw[flujo] (D1.south) -- (P34);
+\end{tikzpicture}
